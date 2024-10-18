@@ -1,4 +1,4 @@
-# CDP Node.js Backend Template
+# cdp-notify
 
 Core delivery platform Node.js Backend Template.
 
@@ -37,7 +37,7 @@ easier to use the Node Version Manager [nvm](https://github.com/creationix/nvm)
 To use the correct version of Node.js for this application, via nvm:
 
 ```bash
-cd cdp-node-backend-template
+cd cdp-notify
 nvm use
 ```
 
@@ -118,11 +118,11 @@ git config --global core.autocrlf false
 ### Postman
 
 A [Postman](https://www.postman.com/) collection and environment are available for making calls to the
-cdp-node-backend-template API.
+cdp-notify API.
 Simply import the collection and environment into Postman.
 
-- [CDP Node Backend Template Postman Collection](postman/cdp-node-backend-template.postman_collection.json)
-- [CDP Node Backend Template Postman Environment](postman/cdp-node-backend-template.postman_environment.json)
+- [CDP Node Backend Template Postman Collection](postman/cdp-notify.postman_collection.json)
+- [CDP Node Backend Template Postman Environment](postman/cdp-notify.postman_environment.json)
 
 ## Development helpers
 
@@ -176,13 +176,13 @@ Helper methods are also available in `/src/helpers/mongo-lock.js`.
 Build:
 
 ```bash
-docker build --target development --no-cache --tag cdp-node-backend-template:development .
+docker build --target development --no-cache --tag cdp-notify:development .
 ```
 
 Run:
 
 ```bash
-docker run -e PORT=3001 -p 3001:3001 cdp-node-backend-template:development
+docker run -e PORT=3001 -p 3001:3001 cdp-notify:development
 ```
 
 ### Production image
@@ -190,13 +190,13 @@ docker run -e PORT=3001 -p 3001:3001 cdp-node-backend-template:development
 Build:
 
 ```bash
-docker build --no-cache --tag cdp-node-backend-template .
+docker build --no-cache --tag cdp-notify .
 ```
 
 Run:
 
 ```bash
-docker run -e PORT=3001 -p 3001:3001 cdp-node-backend-template
+docker run -e PORT=3001 -p 3001:3001 cdp-notify
 ```
 
 ### Docker Compose

@@ -8,6 +8,9 @@ import { mongoDb } from '~/src/helpers/mongodb.js'
 import { failAction } from '~/src/helpers/fail-action.js'
 import { secureContext } from '~/src/helpers/secure-context/index.js'
 import { pulse } from '~/src/helpers/pulse.js'
+import { grafanaAlertListener } from '~/src/helpers/sqs/sqs-listener.js'
+import { msGraphPlugin } from '~/src/helpers/ms-graph/ms-graph.js'
+import { sqsClient } from '~/src/helpers/sqs/sqs-client.js'
 
 async function createServer() {
   const server = hapi.server({
@@ -44,7 +47,16 @@ async function createServer() {
   // pulse         - provides shutdown handlers
   // mongoDb       - sets up mongo connection pool and attaches to `server` and `request` objects
   // router        - routes used in the app
-  await server.register([requestLogger, secureContext, pulse, mongoDb, router])
+  await server.register([
+    requestLogger,
+    secureContext,
+    pulse,
+    msGraphPlugin,
+    mongoDb,
+    sqsClient,
+    grafanaAlertListener,
+    router
+  ])
 
   return server
 }

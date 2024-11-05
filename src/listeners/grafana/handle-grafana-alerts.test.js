@@ -38,9 +38,11 @@ describe('#handle-grafana-alerts', () => {
   })
 
   test('sends an emails to the service owners contact addresses', async () => {
-    renderEmail.mockReturnValue('email')
-    fetchService.mockResolvedValue({ teams: [{ teamId: '123456' }] })
-    fetchTeam.mockResolvedValue({
+    jest.mocked(renderEmail).mockReturnValue('email')
+    jest
+      .mocked(fetchService)
+      .mockResolvedValue({ teams: [{ teamId: '123456' }] })
+    jest.mocked(fetchTeam).mockResolvedValue({
       status: 'success',
       team: { name: 'test-team', alertEmailAddresses: ['foo@bar.com'] }
     })
@@ -64,9 +66,11 @@ describe('#handle-grafana-alerts', () => {
   })
 
   test('sends an multiple emails if the service has more than one', async () => {
-    renderEmail.mockReturnValue('email')
-    fetchService.mockResolvedValue({ teams: [{ teamId: '123456' }] })
-    fetchTeam.mockResolvedValue({
+    jest.mocked(renderEmail).mockReturnValue('email')
+    jest
+      .mocked(fetchService)
+      .mockResolvedValue({ teams: [{ teamId: '123456' }] })
+    jest.mocked(fetchTeam).mockResolvedValue({
       status: 'success',
       team: {
         name: 'test-team',
@@ -93,12 +97,13 @@ describe('#handle-grafana-alerts', () => {
   })
 
   test('sends an multiple emails the service is owned by more than one team', async () => {
-    renderEmail.mockReturnValue('email')
-    fetchService.mockResolvedValue({
+    jest.mocked(renderEmail).mockReturnValue('email')
+    jest.mocked(fetchService).mockResolvedValue({
       teams: [{ teamId: '1111' }, { teamId: '2222' }]
     })
 
-    fetchTeam
+    jest
+      .mocked(fetchTeam)
       .mockResolvedValueOnce({
         status: 'success',
         team: {

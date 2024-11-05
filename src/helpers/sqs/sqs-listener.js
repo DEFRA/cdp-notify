@@ -2,6 +2,7 @@ import { Consumer } from 'sqs-consumer'
 
 import { config } from '~/src/config/index.js'
 import { handleGrafanaAlert } from '~/src/listeners/grafana/handle-grafana-alerts.js'
+import { deleteSqsMessage } from '~/src/helpers/sqs/delete-sqs-message.js'
 
 /**
  * @typedef {StopOptions} StopOptions
@@ -56,7 +57,14 @@ const grafanaAlertListener = {
   options: {
     config: config.get('sqsGrafanaAlerts'),
     messageHandler: async (message, queueUrl, server) => {
-      await handleGrafanaAlert(message, queueUrl, server)
+      try {
+        await handleGrafanaAlert(message, server)
+      } catch (e) {
+        server.logger.error(`SQS ${queueUrl} : ${e}`)
+      } finally {
+        const receiptHandle = message.ReceiptHandle
+        await deleteSqsMessage(server.sqs, queueUrl, receiptHandle)
+      }
     }
   }
 }

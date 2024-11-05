@@ -9,6 +9,11 @@ const nunjucksTestEnv = nunjucks.configure([path.resolve(dirname)], {
   watch: false
 })
 
+/**
+ *
+ * @param {any} params
+ * @returns {string}
+ */
 function renderEmail(params) {
   return nunjucksTestEnv.renderString(
     `{%- from "macro.njk" import emailHtml -%}{{- emailHtml(${JSON.stringify(params, null, 2)}) -}}`,

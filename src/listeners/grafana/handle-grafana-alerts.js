@@ -1,69 +1,117 @@
 import { config } from '~/src/config/index.js'
-import { fetchTeams } from '~/src/helpers/fetch/fetch-teams.js'
-import { deleteSqsMessage } from '~/src/helpers/sqs/delete-sqs-message.js'
 import { sendEmail } from '~/src/helpers/ms-graph/send-email.js'
 import { renderEmail } from '~/src/templates/emails/email-renderer.js'
+import { fetchTeam } from '~/src/helpers/fetch/fetch-team.js'
+import { fetchService } from '~/src/helpers/fetch/fetch-service.js'
 
 const sendEmailAlerts = config.get('sendEmailAlerts')
 const sender = config.get('senderEmailAddress')
 
-function shouldSendAlert(payload) {
-  return payload.team && payload.environment === 'prod'
+/**
+ *
+ * @param {Alert} alert
+ * @returns {boolean}
+ */
+function shouldSendAlert(alert) {
+  return alert.environment === 'prod'
 }
 
-async function handleGrafanaAlert(message, queueUrl, server) {
-  const receiptHandle = message.ReceiptHandle
+/**
+ * @param {Alert} alert
+ * @returns {Promise<*[string]>}
+ */
+async function findContactsForAlert(alert) {
+  if (!alert?.service) return []
+
+  const service = await fetchService(alert.service)
+  if (!service?.teams) return []
+
+  const contacts = []
+  for (const t of service.teams) {
+    const response = await fetchTeam(t.teamId)
+    if (
+      response?.team?.alertEmailAddresses &&
+      Array.isArray(response?.team?.alertEmailAddresses)
+    ) {
+      contacts.push(...response?.team.alertEmailAddresses)
+    }
+  }
+  return contacts
+}
+
+async function handleGrafanaAlert(message, server) {
   const payload = JSON.parse(message.Body)
 
-  if (shouldSendAlert(payload)) {
-    const teamName = payload?.team
-    const response = await fetchTeams(teamName)
+  if (!shouldSendAlert(payload)) {
+    return
+  }
 
-    // todo what happens if teams not defined or length === 0
-    if (!response.teams?.length) {
-      server.logger.error(`Team ${teamName} not found in user-service-backend`)
-      await deleteSqsMessage(server.sqs, queueUrl, receiptHandle)
-      return
-    }
+  let email
+  if (payload.status === 'firing') {
+    email = generateFiringEmail(payload)
+  } else if (payload.status === 'resolved') {
+    // todo this email needs to be constructed still
+    email = generateResolvedEmail(payload)
+  } else {
+    server.logger.warn(`Unexpected status ${payload.status} not sending alert`)
+    return
+  }
 
-    for (const team of response.teams) {
-      if (!team.alertEmailAddresses) {
-        server.logger.info(
-          `Team ${teamName} did not have any alert email addresses configured. Not sending alert`
-        )
-        await deleteSqsMessage(server.sqs, queueUrl, receiptHandle)
-        continue
-      }
+  const contacts = await findContactsForAlert(payload)
 
-      if (sendEmailAlerts) {
-        let email
-        if (payload.status === 'firing') {
-          email = renderEmail(payload)
-        } else if (payload.status === 'resolved') {
-          // todo this email needs to be constructed still
-          email = generateResolvedEmail()
-        } else {
-          server.logger.warn(
-            `Unexpected status ${payload.status} not sending alert`
-          )
-          await deleteSqsMessage(server.sqs, queueUrl, receiptHandle)
-          continue
-        }
-        await sendEmail(server.msGraph, sender, email, team.alertEmailAddresses)
-        await deleteSqsMessage(server.sqs, queueUrl, receiptHandle)
-      } else {
-        server.logger.info(`Alert for TBC`)
-      }
-    }
+  if (contacts?.length === 0) {
+    server.logger.info(
+      `No contact details found ${payload.service}. Not sending alert`
+    )
+    return
+  }
+
+  if (sendEmailAlerts) {
+    await sendEmail(server.msGraph, sender, email, contacts)
+  } else {
+    server.logger.debug(`Sending alert to ${contacts.join(',')}`)
+    server.logger.info(`Alert for TBC`)
   }
 }
 
-// function generateFiringEmail(payload) {
-//   return { subject: 'Firing', body: 'body' }
-// }
+/**
+ *
+ * @param {object} params
+ * @returns {{subject: string, body: string}}
+ */
+function generateResolvedEmail(params) {
+  const alertName = params?.alertName ?? ''
+  return { subject: `Alert Resolved ${alertName}`, body: 'body' }
+}
 
-function generateResolvedEmail() {
-  return { subject: 'Resolved', body: 'body' }
+/**
+ *
+ * @param {object} params
+ * @returns {{subject: string, body: string}}
+ */
+function generateFiringEmail(params) {
+  const alertName = params?.alertName ?? ''
+  return {
+    subject: `Alert Triggered ${alertName}`,
+    body: renderEmail(params)
+  }
 }
 
 export { handleGrafanaAlert }
+
+/**
+ * @typedef Alert
+ * @type {object}
+ * @property {string} environment
+ * @property {string} team
+ * @property {string} service
+ * @property {string} alertName
+ * @property {string} status
+ * @property {string} startsAt
+ * @property {string} endsAt
+ * @property {string} summary
+ * @property {string} description
+ * @property {string} series
+ * @property {string} runbookUrl
+ * @property {string} alertURL
+ */

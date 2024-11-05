@@ -145,6 +145,12 @@ const config = convict({
     default: 'http://localhost:3001',
     env: 'USER_SERVICE_BACKEND_URL'
   },
+  portalBackendUrl: {
+    doc: 'Portal backend for deployments and deployables root API url',
+    format: String,
+    default: 'http://localhost:5094',
+    env: 'PORTAL_BACKEND_URL'
+  },
   sendEmailAlerts: {
     doc: 'Enable email alerts',
     format: Boolean,

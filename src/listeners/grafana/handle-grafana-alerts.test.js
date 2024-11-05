@@ -6,29 +6,10 @@ import { fetchService } from '~/src/helpers/fetch/fetch-service.js'
 import { renderEmail } from '~/src/templates/emails/email-renderer.js'
 import { config } from '~/src/config/index.js'
 
-jest.mock('~/src/templates/emails/email-renderer.js', () => {
-  return {
-    renderEmail: jest.fn()
-  }
-})
-
-jest.mock('~/src/helpers/ms-graph/send-email.js', () => {
-  return {
-    sendEmail: jest.fn()
-  }
-})
-
-jest.mock('~/src/helpers/fetch/fetch-team.js', () => {
-  return {
-    fetchTeam: jest.fn()
-  }
-})
-
-jest.mock('~/src/helpers/fetch/fetch-service.js', () => {
-  return {
-    fetchService: jest.fn()
-  }
-})
+jest.mock('~/src/templates/emails/email-renderer.js')
+jest.mock('~/src/helpers/ms-graph/send-email.js')
+jest.mock('~/src/helpers/fetch/fetch-team.js')
+jest.mock('~/src/helpers/fetch/fetch-service.js')
 
 describe('#handle-grafana-alerts', () => {
   beforeEach(() => {

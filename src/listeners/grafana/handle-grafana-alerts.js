@@ -3,9 +3,12 @@ import { sendEmail } from '~/src/helpers/ms-graph/send-email.js'
 import { renderEmail } from '~/src/templates/emails/email-renderer.js'
 import { fetchTeam } from '~/src/helpers/fetch/fetch-team.js'
 import { fetchService } from '~/src/helpers/fetch/fetch-service.js'
+import { createLogger } from '~/src/helpers/logging/logger.js'
 
 const sendEmailAlerts = config.get('sendEmailAlerts')
 const sender = config.get('senderEmailAddress')
+
+const logger = createLogger()
 
 /**
  *
@@ -21,10 +24,16 @@ function shouldSendAlert(alert) {
  * @returns {Promise<*[string]>}
  */
 async function findContactsForAlert(alert) {
-  if (!alert?.service) return []
+  if (!alert?.service) {
+    logger.warn(`alert did not contain a service field`)
+    return []
+  }
 
   const service = await fetchService(alert.service)
-  if (!service?.teams) return []
+  if (service === null) {
+    logger.warn(`service ${alert.service} was not found`)
+    return []
+  }
 
   const contacts = []
   for (const t of service.teams) {
@@ -36,12 +45,13 @@ async function findContactsForAlert(alert) {
       contacts.push(...response?.team.alertEmailAddresses)
     }
   }
+
+  logger.info(`found ${contacts.length} contacts for ${alert.service}`)
   return contacts
 }
 
 async function handleGrafanaAlert(message, server) {
   const payload = JSON.parse(message.Body)
-
   if (!shouldSendAlert(payload)) {
     return
   }
@@ -58,7 +68,6 @@ async function handleGrafanaAlert(message, server) {
   }
 
   const contacts = await findContactsForAlert(payload)
-
   if (contacts?.length === 0) {
     server.logger.info(
       `No contact details found ${payload.service}. Not sending alert`
@@ -67,6 +76,7 @@ async function handleGrafanaAlert(message, server) {
   }
 
   if (sendEmailAlerts) {
+    server.logger.info('Sending email alert')
     await sendEmail(server.msGraph, sender, email, contacts)
   } else {
     server.logger.debug(`Sending alert to ${contacts.join(',')}`)

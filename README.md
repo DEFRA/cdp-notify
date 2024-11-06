@@ -1,226 +1,35 @@
 # cdp-notify
 
-Core delivery platform Node.js Backend Template.
+## Local Dev
 
-- [Requirements](#requirements)
-  - [Node.js](#nodejs)
-- [Local development](#local-development)
-  - [Setup](#setup)
-  - [Development](#development)
-  - [Testing](#testing)
-  - [Production](#production)
-  - [Npm scripts](#npm-scripts)
-  - [Update dependencies](#update-dependencies)
-  - [Formatting](#formatting)
-    - [Windows prettier issue](#windows-prettier-issue)
-- [API endpoints](#api-endpoints)
-- [Calling API endpoints](#calling-api-endpoints)
-  - [Postman](#postman)
-- [Development helpers](#development-helpers)
-  - [MongoDB Locks](#mongodb-locks)
-- [Docker](#docker)
-  - [Development image](#development-image)
-  - [Production image](#production-image)
-  - [Docker Compose](#docker-compose)
-  - [Dependabot](#dependabot)
-  - [SonarCloud](#sonarcloud)
-- [Licence](#licence)
-  - [About the licence](#about-the-licence)
+Dependencies:
 
-## Requirements
+- cdp-portal-stubs
+- cdp-user-service-backend
+- cdp-portal-backend
+- localstack
 
-### Node.js
+Queue setup:
 
-Please install [Node.js](http://nodejs.org/) `>= v18` and [npm](https://nodejs.org/) `>= v9`. You will find it
-easier to use the Node Version Manager [nvm](https://github.com/creationix/nvm)
-
-To use the correct version of Node.js for this application, via nvm:
-
-```bash
-cd cdp-notify
-nvm use
+```
+$ awslocal sqs create-queue --queue-name cdp_grafana_alerts
 ```
 
-## Local development
+Database Setup
 
-### Setup
-
-Install application dependencies:
-
-```bash
-npm install
+```
+use cdp-portal-backend
+db.teams.update({}, {$set: {alertEmailAddresses: ["test@email"]}})
 ```
 
-### Development
+(this adds test@email to all teams)
 
-To run the application in `development` mode run:
+Testing locally
 
-```bash
-npm run dev
 ```
-
-### Testing
-
-To test the application run:
-
-```bash
-npm run test
+payload='{"environment":"prod","team":"Platform","service":"cdp-notify","alertName":"cdp-notify-ops - Average Response Time","status":"resolved","startsAt":"2024-11-04 16:42:10 +0000 UTC","endsAt":"2024-11-04 16:47:10 +0000 UTC","summary":"Average Response Time Alert in milliseconds of the responseTime value in Opensearch.","description":"Average Response Time Alert","series":"","runbookUrl":"","alertURL":"https://metrics/alerting/grafana/0/view"}
+awslocal sqs send-message --queue-url http://sqs.eu-west-2.127.0.0.1:4566/000000000000/cdp_grafana_alerts --message-body "$payload"
 ```
-
-### Production
-
-To mimic the application running in `production` mode locally run:
-
-```bash
-npm start
-```
-
-### Npm scripts
-
-All available Npm scripts can be seen in [package.json](./package.json)
-To view them in your command line run:
-
-```bash
-npm run
-```
-
-### Update dependencies
-
-To update dependencies use [npm-check-updates](https://github.com/raineorshine/npm-check-updates):
-
-> The following script is a good start. Check out all the options on
-> the [npm-check-updates](https://github.com/raineorshine/npm-check-updates)
-
-```bash
-ncu --interactive --format group
-```
-
-### Formatting
-
-#### Windows prettier issue
-
-If you are having issues with formatting of line breaks on Windows update your global git config by running:
-
-```bash
-git config --global core.autocrlf false
-```
-
-## API endpoints
-
-| Endpoint             | Description                    |
-| :------------------- | :----------------------------- |
-| `GET: /health`       | Health                         |
-| `GET: /example    `  | Example API (remove as needed) |
-| `GET: /example/<id>` | Example API (remove as needed) |
-
-## Calling API endpoints
-
-### Postman
-
-A [Postman](https://www.postman.com/) collection and environment are available for making calls to the
-cdp-notify API.
-Simply import the collection and environment into Postman.
-
-- [CDP Node Backend Template Postman Collection](postman/cdp-notify.postman_collection.json)
-- [CDP Node Backend Template Postman Environment](postman/cdp-notify.postman_environment.json)
-
-## Development helpers
-
-### MongoDB Locks
-
-If you require a write lock for Mongo you can acquire it via `server.locker` or `request.locker`:
-
-```javascript
-async function doStuff(server) {
-  const lock = await server.locker.lock('unique-resource-name')
-
-  if (!lock) {
-    // Lock unavailable
-    return
-  }
-
-  try {
-    // do stuff
-  } finally {
-    await lock.free()
-  }
-}
-```
-
-Keep it small and atomic.
-
-You may use **using** for the lock resource management.
-Note test coverage reports do not like that syntax.
-
-```javascript
-async function doStuff(server) {
-  await using lock = await server.locker.lock('unique-resource-name')
-
-  if (!lock) {
-    // Lock unavailable
-    return
-  }
-
-  // do stuff
-
-  // lock automatically released
-}
-```
-
-Helper methods are also available in `/src/helpers/mongo-lock.js`.
-
-## Docker
-
-### Development image
-
-Build:
-
-```bash
-docker build --target development --no-cache --tag cdp-notify:development .
-```
-
-Run:
-
-```bash
-docker run -e PORT=3001 -p 3001:3001 cdp-notify:development
-```
-
-### Production image
-
-Build:
-
-```bash
-docker build --no-cache --tag cdp-notify .
-```
-
-Run:
-
-```bash
-docker run -e PORT=3001 -p 3001:3001 cdp-notify
-```
-
-### Docker Compose
-
-A local environment with:
-
-- Localstack for AWS services (S3, SQS)
-- Redis
-- MongoDB
-- This service.
-- A commented out frontend example.
-
-```bash
-docker compose up --build -d
-```
-
-### Dependabot
-
-We have added an example dependabot configuration file to the repository. You can enable it by renaming
-the [.github/example.dependabot.yml](.github/example.dependabot.yml) to `.github/dependabot.yml`
-
-### SonarCloud
-
-Instructions for setting up SonarCloud can be found in [sonar-project.properties](./sonar-project.properties)
 
 ## Licence
 

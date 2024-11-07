@@ -19,12 +19,12 @@ async function sendEmail(msGraph, sender, { subject, body }, recipients) {
     message: {
       subject,
       body: {
-        contentType: 'Text',
+        contentType: 'html',
         content: body
       },
       toRecipients
     },
-    saveToSentItems: 'true'
+    saveToSentItems: 'false'
   })
 }
 

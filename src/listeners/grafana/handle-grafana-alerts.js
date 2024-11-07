@@ -91,7 +91,7 @@ async function handleGrafanaAlert(message, server) {
  */
 function generateResolvedEmail(params) {
   const alertName = params?.alertName ?? ''
-  return { subject: `Alert Resolved ${alertName}`, body: 'body' }
+  return { subject: `Alert Resolved ${alertName}`, body: renderEmail(params) }
 }
 
 /**

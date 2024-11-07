@@ -120,8 +120,8 @@
             <td style="font-family: Helvetica, Arial, sans-serif; font-size: 19px; line-height: 1.315789474;">
         <![endif]-->
         <blockquote
-          style="Margin: 0 0 20px 0; border-left: 10px solid #d4351C;padding: 15px 0 0.1px 15px; font-size: 19px; line-height: 25px;">
-          <p style="Margin: 0 0 20px 0; font-size: 19px; line-height: 25px; color: #0B0C0C;">Grafana alert status "{{ params.status }}" for
+          style="Margin: 0 0 20px 0; border-left: 10px solid {{ params.statusColour }};padding: 15px 0 0.1px 15px; font-size: 19px; line-height: 25px;">
+          <p style="Margin: 0 0 20px 0; font-size: 19px; line-height: 25px; color: #0B0C0C;">Grafana alert "{{ params.status }}" for
             "{{ params.alertName }}" in {{ params.environment }}</p></blockquote>
         <p
           style="Margin: 0 0 20px 0; font-size: 19px; line-height: 25px; color: #0B0C0C;">Triggered at 2024-10-30
@@ -136,7 +136,7 @@
           Team</h3>{{ params.team }}<h3
           style="Margin: 0 0 15px 0; padding: 10px 0 0 0; font-size: 19px; line-height: 25px; font-weight: bold; color: #0B0C0C;">
           Alert Url</h3><a style="word-wrap: break-word; color: #1D70B8;"
-                           href="http://grafana.com/alerting/grafana/cdeqmlhvflz40f/view?orgId=1">{{ params.alertURL }}</a>
+                           href="{{ params.alertURL }}">{{ params.alertURL }}</a>
 
         <table role="presentation" style="padding: 0 0 20px 0;">
           <tr>

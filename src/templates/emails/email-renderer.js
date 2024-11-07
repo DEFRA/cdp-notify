@@ -2,12 +2,15 @@ import nunjucks from 'nunjucks'
 import path from 'path'
 import { fileURLToPath } from 'node:url'
 
-const dirname = path.dirname(fileURLToPath(import.meta.url))
-const nunjucksTestEnv = nunjucks.configure([path.resolve(dirname)], {
-  trimBlocks: true,
-  lstripBlocks: true,
-  watch: false
-})
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const nunjucksEnvironment = nunjucks.configure(
+  [path.resolve(__dirname), path.resolve(__dirname, 'html')],
+  {
+    trimBlocks: true,
+    lstripBlocks: true,
+    watch: false
+  }
+)
 
 /**
  *
@@ -15,7 +18,7 @@ const nunjucksTestEnv = nunjucks.configure([path.resolve(dirname)], {
  * @returns {string}
  */
 function renderEmail(params) {
-  return nunjucksTestEnv.renderString(
+  return nunjucksEnvironment.renderString(
     `{%- from "macro.njk" import emailHtml -%}{{- emailHtml(${JSON.stringify(params, null, 2)}) -}}`,
     {}
   )

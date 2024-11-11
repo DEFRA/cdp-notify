@@ -3,7 +3,7 @@
   <html lang="en">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=Windows-1252">
-    <meta content="telephone=no" name="format-detection"> <!-- need to add formatting for real phone numbers -->
+    <meta content="telephone=no" name="format-detection">
     <meta name="viewport" content="width=device-width">
     <title>Grafana Firing Alert</title>
     <style>
@@ -121,22 +121,23 @@
         <![endif]-->
         <blockquote
           style="Margin: 0 0 20px 0; border-left: 10px solid {{ params.statusColour }};padding: 15px 0 0.1px 15px; font-size: 19px; line-height: 25px;">
-          <p style="Margin: 0 0 20px 0; font-size: 19px; line-height: 25px; color: #0B0C0C;">Grafana alert "{{ params.status }}" for
-            "{{ params.alertName }}" in {{ params.environment }}</p></blockquote>
+          <p style="Margin: 0 0 20px 0; font-size: 19px; line-height: 25px; color: #0B0C0C;">Grafana alert {{ params.status }} for
+            {{ params.service }} in {{ params.environment }}
+          </p>
+          <p style="Margin: 0 0 20px 0; font-size: 19px; line-height: 25px; color: #0B0C0C;">{{ param.alertName }}</p>
+        </blockquote>
         <p
           style="Margin: 0 0 20px 0; font-size: 19px; line-height: 25px; color: #0B0C0C;">Triggered at 2024-10-30
           15:58:55.137
           +0000 UTC</p>
-        <h3
-          style="Margin: 0 0 15px 0; padding: 10px 0 0 0; font-size: 19px; line-height: 25px; font-weight: bold; color: #0B0C0C;">
-          Alert Name</h3>{{ params.alertName }}<h3
-          style="Margin: 0 0 15px 0; padding: 10px 0 0 0; font-size: 19px; line-height: 25px; font-weight: bold; color: #0B0C0C;">
-          Summary</h3>{{ params.summary }}<h3
-          style="Margin: 0 0 15px 0; padding: 10px 0 0 0; font-size: 19px; line-height: 25px; font-weight: bold; color: #0B0C0C;">
-          Team</h3>{{ params.team }}<h3
-          style="Margin: 0 0 15px 0; padding: 10px 0 0 0; font-size: 19px; line-height: 25px; font-weight: bold; color: #0B0C0C;">
-          Alert Url</h3><a style="word-wrap: break-word; color: #1D70B8;"
-                           href="{{ params.alertURL }}">{{ params.alertURL }}</a>
+        <h3 style="Margin: 0 0 15px 0; padding: 10px 0 0 0; font-size: 19px; line-height: 25px; font-weight: bold; color: #0B0C0C;">Service</h3>
+        {{ params.service }}
+        <h3 style="Margin: 0 0 15px 0; padding: 10px 0 0 0; font-size: 19px; line-height: 25px; font-weight: bold; color: #0B0C0C;">Alert Name </h3>
+        {{ params.alertName }}
+        <h3 style="Margin: 0 0 15px 0; padding: 10px 0 0 0; font-size: 19px; line-height: 25px; font-weight: bold; color: #0B0C0C;">Summary </h3>
+        {{ params.summary }}
+        <h3 style="Margin: 0 0 15px 0; padding: 10px 0 0 0; font-size: 19px; line-height: 25px; font-weight: bold; color: #0B0C0C;">Alert Url</h3>
+        <a style="word-wrap: break-word; color: #1D70B8;" href="{{ params.alertURL }}">{{ params.alertURL }}</a>
 
         <table role="presentation" style="padding: 0 0 20px 0;">
           <tr>

@@ -1,18 +1,4 @@
-import qs from 'qs'
-
 import { config } from '~/src/config/index.js'
-
-async function findTeams(name) {
-  const queryString = qs.stringify({ name }, { addQueryPrefix: true })
-
-  const endpoint = config.get('userServiceBackendUrl') + `/teams${queryString}`
-
-  const response = await fetch(endpoint, {
-    method: 'get',
-    headers: { 'Content-Type': 'application/json' }
-  })
-  return await response.json()
-}
 
 /**
  *
@@ -28,4 +14,4 @@ async function fetchTeam(id) {
   return await response.json()
 }
 
-export { fetchTeam, findTeams }
+export { fetchTeam }

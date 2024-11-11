@@ -60,7 +60,6 @@ async function handleGrafanaAlert(message, server) {
   if (payload.status === 'firing') {
     email = generateFiringEmail(payload)
   } else if (payload.status === 'resolved') {
-    // todo this email needs to be constructed still
     email = generateResolvedEmail(payload)
   } else {
     server.logger.warn(`Unexpected status ${payload.status} not sending alert`)

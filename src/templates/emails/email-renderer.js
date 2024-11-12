@@ -15,13 +15,10 @@ const nunjucksEnvironment = nunjucks.configure(
 /**
  *
  * @param {any} params
+ * @param {string} statusColour
  * @returns {string}
  */
-function renderEmail(params) {
-  let statusColour = '#d4351C'
-  if (params?.status === 'resolved') {
-    statusColour = '#00703c'
-  }
+function renderEmail(params, statusColour) {
   return nunjucksEnvironment.renderString(
     `{%- from "macro.njk" import emailHtml -%}{{- emailHtml(${JSON.stringify({ statusColour, ...params }, null, 2)}) -}}`,
     {}

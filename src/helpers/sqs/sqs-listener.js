@@ -20,7 +20,6 @@ const sqsListener = {
 
       const listener = Consumer.create({
         queueUrl,
-        // attributeNames: ['SentTimestamp'],
         messageAttributeNames: ['All'],
         waitTimeSeconds: options.config.waitTimeSeconds,
         pollingWaitTimeMs: options.config.pollingWaitTimeMs,
@@ -31,15 +30,21 @@ const sqsListener = {
       })
 
       listener.on('error', (error) => {
-        server.logger.error(`error ${queueUrl} : ${error.message}`)
+        server.logger.error(error, `error ${queueUrl} : ${error.message}`)
       })
 
       listener.on('processing_error', (error) => {
-        server.logger.error(`processing error ${queueUrl} : ${error.message}`)
+        server.logger.error(
+          error,
+          `processing error ${queueUrl} : ${error.message}`
+        )
       })
 
       listener.on('timeout_error', (error) => {
-        server.logger.error(`timeout error ${queueUrl} : ${error.message}`)
+        server.logger.error(
+          error,
+          `timeout error ${queueUrl} : ${error.message}`
+        )
       })
 
       server.events.on('closing', (/** @type {StopOptions} */ options) => {
@@ -59,8 +64,8 @@ const grafanaAlertListener = {
     messageHandler: async (message, queueUrl, server) => {
       try {
         await handleGrafanaAlert(message, server)
-      } catch (e) {
-        server.logger.error(`SQS ${queueUrl} : ${e}`)
+      } catch (error) {
+        server.logger.error(error, `SQS ${queueUrl}: ${error.message}`)
       } finally {
         const receiptHandle = message.ReceiptHandle
         await deleteSqsMessage(server.sqs, queueUrl, receiptHandle)

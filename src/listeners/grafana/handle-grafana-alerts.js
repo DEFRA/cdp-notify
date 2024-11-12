@@ -16,7 +16,8 @@ const logger = createLogger()
  * @returns {boolean}
  */
 function shouldSendAlert(alert) {
-  return alert.environment === 'prod'
+  const alertEnvironments = config.get('alertEnvironments')
+  return alertEnvironments.includes(alert.environment)
 }
 
 /**
@@ -30,24 +31,22 @@ async function findContactsForAlert(alert) {
   }
 
   const service = await fetchService(alert.service)
-  if (service === null) {
+  if (!service?.teams) {
     logger.warn(`service ${alert.service} was not found`)
     return []
   }
 
-  const contacts = []
-  for (const t of service.teams) {
-    const response = await fetchTeam(t.teamId)
-    if (
-      response?.team?.alertEmailAddresses &&
-      Array.isArray(response?.team?.alertEmailAddresses)
-    ) {
-      contacts.push(...response?.team.alertEmailAddresses)
-    }
-  }
+  const contactsPromises = service.teams.map(async (team) => {
+    const response = await fetchTeam(team.teamId)
+    return response?.team?.alertEmailAddresses?.length
+      ? response?.team.alertEmailAddresses
+      : []
+  })
+
+  const contacts = await Promise.all(contactsPromises)
 
   logger.info(`found ${contacts.length} contacts for ${alert.service}`)
-  return contacts
+  return [...new Set(contacts.flat())]
 }
 
 async function handleGrafanaAlert(message, server) {
@@ -67,7 +66,7 @@ async function handleGrafanaAlert(message, server) {
   }
 
   const contacts = await findContactsForAlert(payload)
-  if (contacts?.length === 0) {
+  if (!contacts?.length) {
     server.logger.info(
       `No contact details found ${payload.service}. Not sending alert`
     )
@@ -79,18 +78,10 @@ async function handleGrafanaAlert(message, server) {
     await sendEmail(server.msGraph, sender, email, contacts)
   } else {
     server.logger.debug(`Sending alert to ${contacts.join(',')}`)
-    server.logger.info(`Alert for TBC`)
+    server.logger.info(
+      `Grafana alert ${payload.status} for ${payload.service} in ${payload.environment} - Alert: ${payload.alertName}`
+    )
   }
-}
-
-/**
- *
- * @param {object} params
- * @returns {{subject: string, body: string}}
- */
-function generateResolvedEmail(params) {
-  const alertName = params?.alertName ?? ''
-  return { subject: `Alert Resolved ${alertName}`, body: renderEmail(params) }
 }
 
 /**
@@ -102,7 +93,20 @@ function generateFiringEmail(params) {
   const alertName = params?.alertName ?? ''
   return {
     subject: `Alert Triggered ${alertName}`,
-    body: renderEmail(params)
+    body: renderEmail(params, '#d4351C')
+  }
+}
+
+/**
+ *
+ * @param {object} params
+ * @returns {{subject: string, body: string}}
+ */
+function generateResolvedEmail(params) {
+  const alertName = params?.alertName ?? ''
+  return {
+    subject: `Alert Resolved ${alertName}`,
+    body: renderEmail(params, '#00703c')
   }
 }
 

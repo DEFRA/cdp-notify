@@ -2,6 +2,7 @@ import convict from 'convict'
 import email from 'convict-format-with-validator'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { environments } from '~/src/config/environments.js'
 
 const dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -10,6 +11,21 @@ const isDev = process.env.NODE_ENV === 'development'
 const isTest = process.env.NODE_ENV === 'test'
 
 convict.addFormats(email)
+convict.addFormat({
+  name: 'environment-array',
+  validate: function (values) {
+    const envs = Object.values(environments)
+    const validEnvs = values.every((value) => envs.includes(value))
+    if (!validEnvs) {
+      throw new Error(
+        `ALERT_ENVIRONMENTS environment variable contained unknown environments`
+      )
+    }
+  },
+  coerce: function (val) {
+    return val.split(',')
+  }
+})
 
 const config = convict({
   env: {
@@ -152,10 +168,16 @@ const config = convict({
     env: 'PORTAL_BACKEND_URL'
   },
   sendEmailAlerts: {
-    doc: 'Enable email alerts',
+    doc: 'Enable sending emails',
     format: Boolean,
     default: true,
     env: 'SEND_EMAIL_ALERTS'
+  },
+  alertEnvironments: {
+    doc: 'list of environments to alert on',
+    format: 'environment-array',
+    default: ['prod'],
+    env: 'ALERT_ENVIRONMENTS'
   },
   senderEmailAddress: {
     doc: 'Defra email address used for sending emails',

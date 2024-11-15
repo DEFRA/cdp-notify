@@ -37,7 +37,7 @@ describe('#handle-grafana-alerts', () => {
     expect(sendEmail).not.toHaveBeenCalled()
   })
 
-  test('sends an emails to the service owners contact addresses', async () => {
+  test('sends an emails to the service alert email address', async () => {
     jest.mocked(renderEmail).mockReturnValue('email')
     jest
       .mocked(fetchService)
@@ -65,7 +65,7 @@ describe('#handle-grafana-alerts', () => {
     )
   })
 
-  test('sends an multiple emails if the service has more than one', async () => {
+  test('sends multiple emails if the service has multiple email addresses', async () => {
     jest.mocked(renderEmail).mockReturnValue('email')
     jest
       .mocked(fetchService)
@@ -96,7 +96,7 @@ describe('#handle-grafana-alerts', () => {
     )
   })
 
-  test('sends an multiple emails the service is owned by more than one team', async () => {
+  test('sends multiple emails when the service is owned by more than one team', async () => {
     jest.mocked(renderEmail).mockReturnValue('email')
     jest.mocked(fetchService).mockResolvedValue({
       teams: [{ teamId: '1111' }, { teamId: '2222' }]
@@ -134,6 +134,47 @@ describe('#handle-grafana-alerts', () => {
         subject: 'Alert Triggered test-service - prod'
       },
       ['user@team1', 'user@team2']
+    )
+  })
+
+  test('sends multiple emails to unique email addresses when the service is owned by more than one team', async () => {
+    jest.mocked(renderEmail).mockReturnValue('email')
+    jest.mocked(fetchService).mockResolvedValue({
+      teams: [{ teamId: '1111' }, { teamId: '2222' }]
+    })
+
+    jest
+      .mocked(fetchTeam)
+      .mockResolvedValueOnce({
+        status: 'success',
+        team: {
+          name: 'test-team-one',
+          alertEmailAddresses: ['user@team1', 'user@duplicateTeam']
+        }
+      })
+      .mockResolvedValueOnce({
+        status: 'success',
+        team: {
+          name: 'test-team-two',
+          alertEmailAddresses: ['user@team2', 'user@duplicateTeam']
+        }
+      })
+
+    const message = {
+      Body: JSON.stringify(alert)
+    }
+    await handleGrafanaAlert(message, server)
+
+    const sender = config.get('senderEmailAddress')
+    expect(sendEmail).toHaveBeenCalledTimes(1)
+    expect(sendEmail).toHaveBeenCalledWith(
+      {},
+      sender,
+      {
+        body: 'email',
+        subject: 'Alert Triggered test-service - prod'
+      },
+      ['user@team1', 'user@duplicateTeam', 'user@team2']
     )
   })
 })

@@ -26,13 +26,17 @@ function shouldSendAlert(alert) {
  */
 async function findContactsForAlert(alert) {
   if (!alert?.service) {
-    logger.warn(`alert did not contain a service field`)
+    logger.warn(
+      `alert did not contain a service field:\n${JSON.stringify(alert)}`
+    )
     return []
   }
 
   const service = await fetchService(alert.service)
   if (!service?.teams) {
-    logger.warn(`service ${alert.service} was not found`)
+    logger.warn(
+      `service ${alert.service} was not found:\n${JSON.stringify(alert)}`
+    )
     return []
   }
 
@@ -61,7 +65,9 @@ async function handleGrafanaAlert(message, server) {
   } else if (payload.status === 'resolved') {
     email = generateResolvedEmail(payload)
   } else {
-    server.logger.warn(`Unexpected status ${payload.status} not sending alert`)
+    server.logger.warn(
+      `Unexpected status ${payload.status} not sending alert:\n${JSON.stringify(payload)}`
+    )
     return
   }
 

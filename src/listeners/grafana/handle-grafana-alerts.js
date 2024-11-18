@@ -3,12 +3,9 @@ import { sendEmail } from '~/src/helpers/ms-graph/send-email.js'
 import { renderEmail } from '~/src/templates/emails/email-renderer.js'
 import { fetchTeam } from '~/src/helpers/fetch/fetch-team.js'
 import { fetchService } from '~/src/helpers/fetch/fetch-service.js'
-import { createLogger } from '~/src/helpers/logging/logger.js'
 
 const sendEmailAlerts = config.get('sendEmailAlerts')
 const sender = config.get('senderEmailAddress')
-
-const logger = createLogger()
 
 /**
  *
@@ -22,9 +19,10 @@ function shouldSendAlert(alert) {
 
 /**
  * @param {Alert} alert
+ * @param {import('pino').Logger} logger
  * @returns {Promise<*[string]>}
  */
-async function findContactsForAlert(alert) {
+async function findContactsForAlert(alert, logger) {
   if (!alert?.service) {
     logger.warn(
       `alert did not contain a service field:\n${JSON.stringify(alert)}`
@@ -48,9 +46,12 @@ async function findContactsForAlert(alert) {
   })
 
   const contacts = await Promise.all(contactsPromises)
+  const uniqueContacts = [...new Set(contacts.flat())]
 
-  logger.info(`found ${contacts.length} contacts for ${alert.service}`)
-  return [...new Set(contacts.flat())]
+  logger.info(
+    `found ${uniqueContacts.length} alert email addresses for ${alert.service}`
+  )
+  return uniqueContacts
 }
 
 async function handleGrafanaAlert(message, server) {
@@ -71,22 +72,22 @@ async function handleGrafanaAlert(message, server) {
     return
   }
 
-  const contacts = await findContactsForAlert(payload)
+  const contacts = await findContactsForAlert(payload, server.logger)
   if (!contacts?.length) {
     server.logger.info(
-      `No contact details found ${payload.service}. Not sending alert`
+      `No contact details found ${payload.service}. Not sending alert - MessageId: ${message.MessageId}`
     )
     return
   }
 
+  server.logger.debug(`Sending alert to ${contacts.join(',')}`)
+  server.logger.info(
+    `Grafana alert ${payload.status} for ${payload.service} in ${payload.environment} - Alert: ${payload.alertName} MessageId: ${message.MessageId}`
+  )
+
   if (sendEmailAlerts) {
     server.logger.info('Sending email alert')
     await sendEmail(server.msGraph, sender, email, contacts)
-  } else {
-    server.logger.debug(`Sending alert to ${contacts.join(',')}`)
-    server.logger.info(
-      `Grafana alert ${payload.status} for ${payload.service} in ${payload.environment} - Alert: ${payload.alertName}`
-    )
   }
 }
 

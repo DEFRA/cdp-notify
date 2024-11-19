@@ -2,7 +2,7 @@
  *
  * @param {any} msGraph
  * @param {string} sender
- * @param {{subject: string, body: string}} content
+ * @param {EmailContent} content
  * @param {[string]} recipients
  * @returns {Promise<*>}
  */
@@ -29,3 +29,6 @@ async function sendEmail(msGraph, sender, { subject, body }, recipients) {
 }
 
 export { sendEmail }
+/**
+ * @import { EmailContent } from '~src/listeners/grafana/handle-grafana-alerts.js'
+ */

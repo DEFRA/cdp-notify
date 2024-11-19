@@ -1,13 +1,11 @@
+import { cwd } from 'node:process'
 import convict from 'convict'
 import email from 'convict-format-with-validator'
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
+
 import { environments } from '~/src/config/environments.js'
 
-const dirname = path.dirname(fileURLToPath(import.meta.url))
-
 const isProduction = process.env.NODE_ENV === 'production'
-const isDev = process.env.NODE_ENV === 'development'
+const isDevelopment = process.env.NODE_ENV === 'development'
 const isTest = process.env.NODE_ENV === 'test'
 
 convict.addFormats(email)
@@ -48,7 +46,7 @@ const config = convict({
   root: {
     doc: 'Project root',
     format: String,
-    default: path.resolve(dirname, '../..')
+    default: cwd()
   },
   awsRegion: {
     doc: 'AWS region',
@@ -70,7 +68,7 @@ const config = convict({
   isDevelopment: {
     doc: 'If this application running in the development environment',
     format: Boolean,
-    default: isDev
+    default: isDevelopment
   },
   isTest: {
     doc: 'If this application running in the test environment',
@@ -209,6 +207,18 @@ const config = convict({
     sensitive: true,
     env: 'AZURE_CLIENT_SECRET',
     default: 'test_value'
+  },
+  nunjucks: {
+    watch: {
+      doc: 'Reload templates when they are changed.',
+      format: Boolean,
+      default: isDevelopment
+    },
+    noCache: {
+      doc: 'Use a cache and recompile templates each time',
+      format: Boolean,
+      default: isDevelopment
+    }
   }
 })
 

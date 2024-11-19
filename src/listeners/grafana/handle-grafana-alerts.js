@@ -1,11 +1,17 @@
 import { config } from '~/src/config/index.js'
 import { sendEmail } from '~/src/helpers/ms-graph/send-email.js'
-import { renderEmail } from '~/src/templates/emails/email-renderer.js'
 import { fetchTeam } from '~/src/helpers/fetch/fetch-team.js'
 import { fetchService } from '~/src/helpers/fetch/fetch-service.js'
+import { renderEmail } from '~/src/helpers/nunjucks/render-email.js'
 
 const sendEmailAlerts = config.get('sendEmailAlerts')
 const sender = config.get('senderEmailAddress')
+
+const renderGrafanaEmail = renderEmail('grafana-alert')
+const alertColours = {
+  success: '#00703c',
+  failure: '#d4351C'
+}
 
 /**
  *
@@ -19,7 +25,7 @@ function shouldSendAlert(alert) {
 
 /**
  * @param {Alert} alert
- * @param {import('pino').Logger} logger
+ * @param {Logger} logger
  * @returns {Promise<*[string]>}
  */
 async function findContactsForAlert(alert, logger) {
@@ -92,36 +98,50 @@ async function handleGrafanaAlert(message, server) {
 }
 
 /**
- *
- * @param {object} params
- * @returns {{subject: string, body: string}}
+ * Generate an email for a firing alert
+ * @param {Alert} params
+ * @returns {EmailContent}
  */
 function generateFiringEmail(params) {
-  const alertName = params?.alertName ?? ''
+  const subject =
+    'Alert Triggered' + (params.alertName ? ` ${params.alertName}` : '')
+  const context = {
+    pageTitle: 'Grafana Firing Alert',
+    statusColour: alertColours.failure,
+    ...params
+  }
+
   return {
-    subject: `Alert Triggered ${alertName}`,
-    body: renderEmail(params, '#d4351C')
+    subject,
+    body: renderGrafanaEmail(context)
   }
 }
 
 /**
- *
- * @param {object} params
- * @returns {{subject: string, body: string}}
+ * Generate an email for a resolved alert
+ * @param {Alert} params
+ * @returns {EmailContent}
  */
 function generateResolvedEmail(params) {
-  const alertName = params?.alertName ?? ''
+  const subject =
+    'Alert Resolved' + (params.alertName ? ` ${params.alertName}` : '')
+
+  const context = {
+    pageTitle: 'Grafana Alert Resolved',
+    statusColour: alertColours.success,
+    ...params
+  }
+
   return {
-    subject: `Alert Resolved ${alertName}`,
-    body: renderEmail(params, '#00703c')
+    subject,
+    body: renderGrafanaEmail(context)
   }
 }
 
 export { handleGrafanaAlert }
 
 /**
- * @typedef Alert
- * @type {object}
+ * @typedef {object} Alert
  * @property {string} environment
  * @property {string} team
  * @property {string} service
@@ -134,4 +154,14 @@ export { handleGrafanaAlert }
  * @property {string} series
  * @property {string} runbookUrl
  * @property {string} alertURL
+ */
+
+/**
+ * @typedef {object} EmailContent
+ * @property {string} subject
+ * @property {string} body
+ */
+
+/**
+ * @import {Logger} from 'pino'
  */

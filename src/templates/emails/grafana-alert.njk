@@ -1,0 +1,56 @@
+{% extends "layouts/email.njk" %}
+
+{% block content %}
+    <blockquote
+            style="Margin: 0 0 20px 0; border-left: 10px solid {{ statusColour }}; padding: 15px 0 0.1px 15px; font-size: 19px; line-height: 25px;">
+        <p style="Margin: 0 0 20px 0; font-size: 19px; line-height: 25px; color: #0B0C0C;">
+            Grafana alert {{ status }} for {{ service }} in {{ environment }}
+        </p>
+        <p style="Margin: 0 0 20px 0; font-size: 19px; line-height: 25px; color: #0B0C0C;">
+            {{ alertName }}
+        </p>
+    </blockquote>
+
+    {% if startsAt %}
+        <p style="Margin: 0 0 20px 0; font-size: 19px; line-height: 25px; color: #0B0C0C;">
+            Triggered at {{ startsAt | formatDate }}
+
+        </p>
+    {% endif %}
+
+    {% if endsAt %}
+        <p style="Margin: 0 0 20px 0; font-size: 19px; line-height: 25px; color: #0B0C0C;">
+            Resolved at {{ endsAt | formatDate }}
+        </p>
+    {% endif %}
+
+    <h3 style="Margin: 0 0 10px 0; padding: 10px 0 0 0; font-size: 19px; line-height: 25px; font-weight: bold; color: #0B0C0C;">
+        Service
+    </h3>
+    <p style="Margin: 0 0 20px 0; font-size: 19px; line-height: 25px; color: #0B0C0C;">
+        {{ service }}
+    </p>
+
+    <h3 style="Margin: 0 0 10px 0; padding: 10px 0 0 0; font-size: 19px; line-height: 25px; font-weight: bold; color: #0B0C0C;">
+        Alert Name
+    </h3>
+    <p style="Margin: 0 0 20px 0; font-size: 19px; line-height: 25px; color: #0B0C0C;">
+        {{ alertName }}
+    </p>
+
+    <h3 style="Margin: 0 0 10px 0; padding: 10px 0 0 0; font-size: 19px; line-height: 25px; font-weight: bold; color: #0B0C0C;">
+        Summary
+    </h3>
+    <p style="Margin: 0 0 20px 0; font-size: 19px; line-height: 25px; color: #0B0C0C;">
+        {{ summary }}
+    </p>
+
+    <h3 style="Margin: 0 0 10px 0; padding: 10px 0 0 0; font-size: 19px; line-height: 25px; font-weight: bold; color: #0B0C0C;">
+        Alert Url
+    </h3>
+    <p style="Margin: 0 0 20px 0; font-size: 19px; line-height: 25px; color: #0B0C0C;">
+        <a style="word-wrap: break-word; color: #1D70B8;" href="{{ alertURL }}">{{ alertURL }}</a>
+    </p>
+
+{% endblock %}
+

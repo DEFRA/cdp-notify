@@ -3,10 +3,8 @@ import { handleGrafanaAlert } from '~/src/listeners/grafana/handle-grafana-alert
 import { sendEmail } from '~/src/helpers/ms-graph/send-email.js'
 import { fetchTeam } from '~/src/helpers/fetch/fetch-team.js'
 import { fetchService } from '~/src/helpers/fetch/fetch-service.js'
-import { renderEmail } from '~/src/templates/emails/email-renderer.js'
 import { config } from '~/src/config/index.js'
 
-jest.mock('~/src/templates/emails/email-renderer.js')
 jest.mock('~/src/helpers/ms-graph/send-email.js')
 jest.mock('~/src/helpers/fetch/fetch-team.js')
 jest.mock('~/src/helpers/fetch/fetch-service.js')
@@ -38,7 +36,6 @@ describe('#handle-grafana-alerts', () => {
   })
 
   test('sends an emails to the service alert email address', async () => {
-    jest.mocked(renderEmail).mockReturnValue('email')
     jest
       .mocked(fetchService)
       .mockResolvedValue({ teams: [{ teamId: '123456' }] })
@@ -58,7 +55,7 @@ describe('#handle-grafana-alerts', () => {
       {},
       sender,
       {
-        body: 'email',
+        body: expect.stringContaining('Grafana Firing Alert'),
         subject: 'Alert Triggered test-service - prod'
       },
       ['foo@bar.com']
@@ -66,7 +63,6 @@ describe('#handle-grafana-alerts', () => {
   })
 
   test('sends multiple emails if the service has multiple email addresses', async () => {
-    jest.mocked(renderEmail).mockReturnValue('email')
     jest
       .mocked(fetchService)
       .mockResolvedValue({ teams: [{ teamId: '123456' }] })
@@ -89,7 +85,7 @@ describe('#handle-grafana-alerts', () => {
       {},
       sender,
       {
-        body: 'email',
+        body: expect.stringContaining('Grafana Firing Alert'),
         subject: 'Alert Triggered test-service - prod'
       },
       ['a@foo.bar', 'b@foo.bar', 'c@foo.bar']
@@ -97,7 +93,6 @@ describe('#handle-grafana-alerts', () => {
   })
 
   test('sends multiple emails when the service is owned by more than one team', async () => {
-    jest.mocked(renderEmail).mockReturnValue('email')
     jest.mocked(fetchService).mockResolvedValue({
       teams: [{ teamId: '1111' }, { teamId: '2222' }]
     })
@@ -130,7 +125,7 @@ describe('#handle-grafana-alerts', () => {
       {},
       sender,
       {
-        body: 'email',
+        body: expect.stringContaining('Grafana Firing Alert'),
         subject: 'Alert Triggered test-service - prod'
       },
       ['user@team1', 'user@team2']
@@ -138,7 +133,6 @@ describe('#handle-grafana-alerts', () => {
   })
 
   test('sends multiple emails to unique email addresses when the service is owned by more than one team', async () => {
-    jest.mocked(renderEmail).mockReturnValue('email')
     jest.mocked(fetchService).mockResolvedValue({
       teams: [{ teamId: '1111' }, { teamId: '2222' }]
     })
@@ -171,10 +165,56 @@ describe('#handle-grafana-alerts', () => {
       {},
       sender,
       {
-        body: 'email',
+        body: expect.stringContaining('Grafana Firing Alert'),
         subject: 'Alert Triggered test-service - prod'
       },
       ['user@team1', 'user@duplicateTeam', 'user@team2']
+    )
+  })
+
+  test('Firing email should contain expected content', async () => {
+    jest
+      .mocked(fetchService)
+      .mockResolvedValue({ teams: [{ teamId: '123456' }] })
+    jest.mocked(fetchTeam).mockResolvedValue({
+      status: 'success',
+      team: { name: 'test-team', alertEmailAddresses: ['foo@bar.com'] }
+    })
+
+    const message = {
+      Body: JSON.stringify(alert)
+    }
+    await handleGrafanaAlert(message, server)
+
+    expect(sendEmail).toHaveBeenCalledTimes(1)
+
+    const sendEmailMockThirdArg = sendEmail.mock.calls[0][2]
+    expect(sendEmailMockThirdArg.body).toMatchSnapshot()
+    expect(sendEmailMockThirdArg.subject).toBe(
+      'Alert Triggered test-service - prod'
+    )
+  })
+
+  test('Resolved email should contain expected content', async () => {
+    jest
+      .mocked(fetchService)
+      .mockResolvedValue({ teams: [{ teamId: '123456' }] })
+    jest.mocked(fetchTeam).mockResolvedValue({
+      status: 'success',
+      team: { name: 'test-team', alertEmailAddresses: ['foo@bar.com'] }
+    })
+
+    const message = {
+      Body: JSON.stringify({ ...alert, status: 'resolved' })
+    }
+    await handleGrafanaAlert(message, server)
+
+    expect(sendEmail).toHaveBeenCalledTimes(1)
+
+    const sendEmailMockThirdArg = sendEmail.mock.calls[0][2]
+    expect(sendEmailMockThirdArg.body).toMatchSnapshot()
+    expect(sendEmailMockThirdArg.subject).toBe(
+      'Alert Resolved test-service - prod'
     )
   })
 })

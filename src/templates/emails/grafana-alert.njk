@@ -13,14 +13,14 @@
 
     {% if startsAt %}
         <p style="Margin: 0 0 20px 0; font-size: 19px; line-height: 25px; color: #0B0C0C;">
-            Triggered at {{ startsAt | formatDate }}
+            Triggered on {{ startsAt | formatDate }}
 
         </p>
     {% endif %}
 
     {% if endsAt %}
         <p style="Margin: 0 0 20px 0; font-size: 19px; line-height: 25px; color: #0B0C0C;">
-            Resolved at {{ endsAt | formatDate }}
+            Resolved on {{ endsAt | formatDate }}
         </p>
     {% endif %}
 

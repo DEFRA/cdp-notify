@@ -133,12 +133,12 @@ exports[`#handle-grafana-alerts Firing email should contain expected content 1`]
     </blockquote>
 
         <p style="Margin: 0 0 20px 0; font-size: 19px; line-height: 25px; color: #0B0C0C;">
-            Triggered at Monday 4th November 2024, 12:53:20
+            Triggered on Monday 4th November 2024 at 12:53:20
 
         </p>
 
         <p style="Margin: 0 0 20px 0; font-size: 19px; line-height: 25px; color: #0B0C0C;">
-            Resolved at Monday 4th November 2024, 12:53:20
+            Resolved on Monday 4th November 2024 at 12:53:20
         </p>
 
     <h3 style="Margin: 0 0 10px 0; padding: 10px 0 0 0; font-size: 19px; line-height: 25px; font-weight: bold; color: #0B0C0C;">
@@ -321,12 +321,12 @@ exports[`#handle-grafana-alerts Resolved email should contain expected content 1
     </blockquote>
 
         <p style="Margin: 0 0 20px 0; font-size: 19px; line-height: 25px; color: #0B0C0C;">
-            Triggered at Monday 4th November 2024, 12:53:20
+            Triggered on Monday 4th November 2024 at 12:53:20
 
         </p>
 
         <p style="Margin: 0 0 20px 0; font-size: 19px; line-height: 25px; color: #0B0C0C;">
-            Resolved at Monday 4th November 2024, 12:53:20
+            Resolved on Monday 4th November 2024 at 12:53:20
         </p>
 
     <h3 style="Margin: 0 0 10px 0; padding: 10px 0 0 0; font-size: 19px; line-height: 25px; font-weight: bold; color: #0B0C0C;">

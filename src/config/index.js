@@ -26,6 +26,26 @@ convict.addFormat({
 })
 
 const config = convict({
+  service: {
+    name: {
+      doc: 'Api Service Name',
+      format: String,
+      default: 'cdp-notify'
+    },
+    version: {
+      doc: 'The service version, this variable is injected into your docker container in CDP environments',
+      format: String,
+      nullable: true,
+      default: null,
+      env: 'SERVICE_VERSION'
+    },
+    environment: {
+      doc: 'The environment the app is running in',
+      format: String,
+      default: 'local',
+      env: 'ENVIRONMENT'
+    }
+  },
   env: {
     doc: 'The application environment.',
     format: ['production', 'development', 'test'],
@@ -37,11 +57,6 @@ const config = convict({
     format: 'port',
     default: 3007,
     env: 'PORT'
-  },
-  serviceName: {
-    doc: 'Api Service Name',
-    format: String,
-    default: 'cdp-notify'
   },
   root: {
     doc: 'Project root',
@@ -59,6 +74,12 @@ const config = convict({
     format: String,
     default: 'http://127.0.0.1:4566',
     env: 'SQS_ENDPOINT'
+  },
+  snsEndpoint: {
+    doc: 'AWS SNS endpoint',
+    format: String,
+    default: 'http://127.0.0.1:4566',
+    env: 'SNS_ENDPOINT'
   },
   isProduction: {
     doc: 'If this application running in the production environment',
@@ -218,6 +239,121 @@ const config = convict({
       doc: 'Use a cache and recompile templates each time',
       format: Boolean,
       default: isDevelopment
+    }
+  },
+  github: {
+    repos: {
+      cdpAppConfig: {
+        doc: 'GitHub repo for cdp-app-config',
+        format: String,
+        default: 'cdp-app-config',
+        env: 'GITHUB_REPO_APP_CONFIG'
+      },
+      cdpNginxUpstreams: {
+        doc: 'GitHub repo for cdp-nginx-upstreams',
+        format: String,
+        default: 'cdp-nginx-upstreams',
+        env: 'GITHUB_REPO_NGINX_UPSTREAMS'
+      },
+      cdpTfSvcInfra: {
+        doc: 'GitHub repo for cdp-tf-svc-infra',
+        format: String,
+        default: 'cdp-tf-svc-infra',
+        env: 'GITHUB_REPO_TF_SVC_INFRA'
+      },
+      cdpGrafanaSvc: {
+        doc: 'GitHub repo to create default dashboard config in',
+        format: String,
+        default: 'cdp-grafana-svc',
+        env: 'GITHUB_REPO_DASHBOARDS'
+      },
+      cdpSquidProxy: {
+        doc: 'GitHub repo to create default dashboard config in',
+        format: String,
+        default: 'cdp-squid-proxy',
+        env: 'GITHUB_REPO_SQUID_PROXY'
+      },
+      createWorkflows: {
+        doc: 'GitHub repository containing the create workflows',
+        format: String,
+        default: 'cdp-create-workflows',
+        env: 'GITHUB_REPO_CREATE_WORKFLOWS'
+      },
+      appDeployments: {
+        doc: 'Repository to store deployment state for services on CDP',
+        format: String,
+        default: 'cdp-app-deployments'
+      }
+    },
+    failedWorkflows: {
+      createService: {
+        slackChannel: {
+          doc: 'Slack Channel for failed workflows involved in creating a service',
+          format: String,
+          default: 'cdp-platform-alerts',
+          env: 'CREATE_FLOW_SLACK_CHANNEL'
+        }
+      },
+      portalJourney: {
+        slackChannel: {
+          doc: 'Slack Channel for alerts for failed Portal journey tests',
+          format: String,
+          default: 'cdp-platform-alerts',
+          env: 'PORTAL_JOURNEY_TESTS_SLACK_CHANNEL'
+        },
+        name: {
+          doc: 'GitHub Workflow name for Portal journey tests',
+          format: String,
+          default: 'Journey Tests',
+          env: 'PORTAL_JOURNEY_TESTS_WORKFLOW_NAME'
+        }
+      }
+    }
+  },
+  slack: {
+    snsCdpNotificationArn: {
+      doc: 'SNS CDP Notification Topic ARN',
+      format: String,
+      default: 'arn:aws:sns:eu-west-2:000000000000:cdp-notification',
+      env: 'SNS_CDP_NOTIFICATION_TOPIC_ARN'
+    },
+    sendFailedActionNotification: {
+      doc: 'Send notification for failed GitHub Action',
+      format: Boolean,
+      default: true,
+      env: 'SEND_FAILED_ACTION_NOTIFICATION'
+    }
+  },
+  sqsGitHubEvents: {
+    queueUrl: {
+      doc: 'URL of sqs queue providing gitHub events',
+      format: String,
+      default: 'cdp-notify-github-events',
+      env: 'SQS_GITHUB_QUEUE'
+    },
+    waitTimeSeconds: {
+      doc: 'The duration for which the call will wait for a message to arrive in the queue before returning',
+      format: Number,
+      default: 10,
+      env: 'SQS_GITHUB_WAIT_TIME_SECONDS'
+    },
+    visibilityTimeout: {
+      doc: 'The duration (in seconds) that the received messages are hidden from subsequent retrieve requests after being retrieved by a ReceiveMessage request.',
+      format: Number,
+      default: 400,
+      env: 'SQS_GITHUB_VISIBILITY_TIMEOUT'
+    },
+    pollingWaitTimeMs: {
+      doc: 'The duration to wait before repolling the queue',
+      format: Number,
+      default: 0,
+      env: 'SQS_GITHUB_POLLING_WAIT_TIME_MS'
+    },
+    enabled: {
+      doc: 'Should the service listen for gitHub webhook events?',
+      format: Boolean,
+      default: true,
+      env: 'SQS_GITHUB_ENABLED'
     }
   }
 })

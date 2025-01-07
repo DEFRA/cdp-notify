@@ -33,6 +33,7 @@
   "author": "Defra DDTS",
   "license": "OGL-UK-3.0",
   "dependencies": {
+    "@aws-sdk/client-sns": "3.721.0",
     "@azure/identity": "4.5.0",
     "@babel/runtime": "^7.25.6",
     "@elastic/ecs-pino-format": "^1.5.0",

@@ -11,6 +11,8 @@ import { pulse } from '~/src/helpers/pulse.js'
 import { grafanaAlertListener } from '~/src/helpers/sqs/sqs-listener.js'
 import { msGraphPlugin } from '~/src/helpers/ms-graph/ms-graph.js'
 import { sqsClient } from '~/src/helpers/sqs/sqs-client.js'
+import { snsClient } from '~/src/helpers/sns/sns-client.js'
+import { gitHubEventsListener } from '~/src/listeners/sqs-listener.js'
 
 async function createServer() {
   const server = hapi.server({
@@ -54,9 +56,14 @@ async function createServer() {
     msGraphPlugin,
     mongoDb,
     sqsClient,
+    snsClient,
     grafanaAlertListener,
     router
   ])
+
+  if (config.get('sqsGitHubEvents.enabled')) {
+    await server.register(gitHubEventsListener)
+  }
 
   return server
 }

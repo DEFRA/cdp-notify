@@ -15,18 +15,16 @@ const githubWebhooks = new Set([
 ])
 
 const shouldProcessCreateWorkflows = (message) => {
-  const repoName = message.repository?.name
-  const workflowName = message.workflow_run.name
+  if (message?.github_event === 'workflow_run') {
+    const repoName = message.repository?.name
+    const workflowName = message.workflow_run?.name
+    const infraDevTfSvcInfraRun =
+      repoName === gitHubRepoConfig.cdpTfSvcInfra &&
+      workflowName.toLocaleLowerCase().includes('infra-dev')
 
-  const infraDevTfSvcInfraRun =
-    repoName === gitHubRepoConfig.cdpTfSvcInfra &&
-    workflowName.toLocaleLowerCase().includes('infra-dev')
-
-  return (
-    message.github_event === 'workflow_run' &&
-    githubWebhooks.has(repoName) &&
-    !infraDevTfSvcInfraRun
-  )
+    return githubWebhooks.has(repoName) && !infraDevTfSvcInfraRun
+  }
+  return false
 }
 
 const shouldProcessPortalJourneyTests = (message) => {

@@ -23,35 +23,31 @@ function shouldSendAlert(alert) {
   return alertEnvironments.includes(alert.environment)
 }
 
+async function getTeams(alert, logger) {
+  const service = await fetchService(alert.service)
+  if (!service?.teams) {
+    logger.info(
+      `service ${alert.service} was not found:\n${JSON.stringify(alert)}`
+    )
+    return []
+  }
+
+  const teams = service.teams.map(async (team) => await fetchTeam(team.teamId))
+
+  return await Promise.all(teams)
+}
+
 /**
  * @param {Alert} alert
  * @param {Logger} logger
  * @returns {Promise<*[string]>}
  */
 async function findContactsForAlert(alert, logger) {
-  if (!alert?.service) {
-    logger.warn(
-      `alert did not contain a service field:\n${JSON.stringify(alert)}`
-    )
-    return []
-  }
+  const teams = await getTeams(alert, logger)
 
-  const service = await fetchService(alert.service)
-  if (!service?.teams) {
-    logger.warn(
-      `service ${alert.service} was not found:\n${JSON.stringify(alert)}`
-    )
-    return []
-  }
-
-  const contactsPromises = service.teams.map(async (team) => {
-    const response = await fetchTeam(team.teamId)
-    return response?.team?.alertEmailAddresses?.length
-      ? response?.team.alertEmailAddresses
-      : []
-  })
-
-  const contacts = await Promise.all(contactsPromises)
+  const contacts = teams.map((team) =>
+    team.team?.alertEmailAddresses?.length ? team.team.alertEmailAddresses : []
+  )
   const uniqueContacts = [...new Set(contacts.flat())]
 
   logger.info(
@@ -60,10 +56,19 @@ async function findContactsForAlert(alert, logger) {
   return uniqueContacts
 }
 
-async function handleGrafanaAlert(message, server) {
+async function handleGrafanaEmailAlert(message, server) {
+  const logger = server.logger
   const payload = JSON.parse(message.Body)
+
   if (!shouldSendAlert(payload)) {
     return
+  }
+
+  if (!payload?.service) {
+    logger.warn(
+      `alert did not contain a service field:\n${JSON.stringify(payload)}`
+    )
+    return []
   }
 
   let email
@@ -138,7 +143,7 @@ function generateResolvedEmail(params) {
   }
 }
 
-export { handleGrafanaAlert }
+export { handleGrafanaEmailAlert }
 
 /**
  * @typedef {object} Alert

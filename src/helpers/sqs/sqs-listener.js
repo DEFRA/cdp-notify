@@ -1,8 +1,10 @@
 import { Consumer } from 'sqs-consumer'
 
 import { config } from '~/src/config/index.js'
-import { handleGrafanaAlert } from '~/src/listeners/grafana/handle-grafana-alerts.js'
+import { handleGrafanaEmailAlert } from '~/src/listeners/grafana/email/handle-grafana-email-alerts.js'
 import { deleteSqsMessage } from '~/src/helpers/sqs/delete-sqs-message.js'
+import { handle } from '~/src/listeners/github/message-handler.js'
+import { handleGrafanaPagerDutyAlert } from '~/src/listeners/grafana/pagerduty/handle-grafana-pagerduty-alerts.js'
 
 /**
  * @typedef {StopOptions} StopOptions
@@ -63,18 +65,34 @@ const grafanaAlertListener = {
     config: config.get('sqsGrafanaAlerts'),
     messageHandler: async (message, queueUrl, server) => {
       try {
-        await handleGrafanaAlert(message, server)
+        await handleGrafanaEmailAlert(message, server)
       } catch (error) {
         server.logger.error(error, `SQS ${queueUrl}: ${error.message}`)
-      } finally {
+      }
+      try {
+        await handleGrafanaPagerDutyAlert(message, server)
         const receiptHandle = message.ReceiptHandle
         await deleteSqsMessage(server.sqs, queueUrl, receiptHandle)
+      } catch (error) {
+        server.logger.error(error, `SQS ${queueUrl}: ${error.message}`)
       }
     }
   }
 }
 
-export { grafanaAlertListener }
+const gitHubEventsListener = {
+  plugin: sqsListener,
+  options: {
+    config: config.get('sqsGitHubEvents'),
+    messageHandler: async (message, queueUrl, server) => {
+      const payload = JSON.parse(message.Body)
+      await handle(server, payload)
+      return message
+    }
+  }
+}
+
+export { grafanaAlertListener, gitHubEventsListener }
 /**
  * @import {StopOptions} from 'sqs-consumer'
  */

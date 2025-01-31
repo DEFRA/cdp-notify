@@ -26,8 +26,8 @@ async function sendAlert(integrationKey, alert, teams, dedupeKey, eventAction) {
       event_action: eventAction,
       links: [
         {
-          href: alert.alertUrl,
-          text: alert.alertUrl
+          href: alert.alertURL,
+          text: alert.alertURL
         }
       ]
     })

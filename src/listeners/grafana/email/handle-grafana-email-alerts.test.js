@@ -1,5 +1,5 @@
 import { createLogger } from '~/src/helpers/logging/logger.js'
-import { handleGrafanaAlert } from '~/src/listeners/grafana/handle-grafana-alerts.js'
+import { handleGrafanaEmailAlert } from '~/src/listeners/grafana/email/handle-grafana-email-alerts.js'
 import { sendEmail } from '~/src/helpers/ms-graph/send-email.js'
 import { fetchTeam } from '~/src/helpers/fetch/fetch-team.js'
 import { fetchService } from '~/src/helpers/fetch/fetch-service.js'
@@ -18,7 +18,7 @@ describe('#handle-grafana-alerts', () => {
 
   test('does not send email for an invalid message', async () => {
     const message = { Body: '{"status": "ok"}' }
-    await handleGrafanaAlert(message, server)
+    await handleGrafanaEmailAlert(message, server)
 
     expect(sendEmail).not.toHaveBeenCalled()
   })
@@ -30,7 +30,7 @@ describe('#handle-grafana-alerts', () => {
         service: 'test-service'
       })
     }
-    await handleGrafanaAlert(message, server)
+    await handleGrafanaEmailAlert(message, server)
 
     expect(sendEmail).not.toHaveBeenCalled()
   })
@@ -47,7 +47,7 @@ describe('#handle-grafana-alerts', () => {
     const message = {
       Body: JSON.stringify(alert)
     }
-    await handleGrafanaAlert(message, server)
+    await handleGrafanaEmailAlert(message, server)
 
     const sender = config.get('senderEmailAddress')
     expect(sendEmail).toHaveBeenCalledTimes(1)
@@ -77,7 +77,7 @@ describe('#handle-grafana-alerts', () => {
     const message = {
       Body: JSON.stringify(alert)
     }
-    await handleGrafanaAlert(message, server)
+    await handleGrafanaEmailAlert(message, server)
 
     const sender = config.get('senderEmailAddress')
     expect(sendEmail).toHaveBeenCalledTimes(1)
@@ -117,7 +117,7 @@ describe('#handle-grafana-alerts', () => {
     const message = {
       Body: JSON.stringify(alert)
     }
-    await handleGrafanaAlert(message, server)
+    await handleGrafanaEmailAlert(message, server)
 
     const sender = config.get('senderEmailAddress')
     expect(sendEmail).toHaveBeenCalledTimes(1)
@@ -157,7 +157,7 @@ describe('#handle-grafana-alerts', () => {
     const message = {
       Body: JSON.stringify(alert)
     }
-    await handleGrafanaAlert(message, server)
+    await handleGrafanaEmailAlert(message, server)
 
     const sender = config.get('senderEmailAddress')
     expect(sendEmail).toHaveBeenCalledTimes(1)
@@ -184,7 +184,7 @@ describe('#handle-grafana-alerts', () => {
     const message = {
       Body: JSON.stringify(alert)
     }
-    await handleGrafanaAlert(message, server)
+    await handleGrafanaEmailAlert(message, server)
 
     expect(sendEmail).toHaveBeenCalledTimes(1)
 
@@ -207,7 +207,7 @@ describe('#handle-grafana-alerts', () => {
     const message = {
       Body: JSON.stringify({ ...alert, status: 'resolved' })
     }
-    await handleGrafanaAlert(message, server)
+    await handleGrafanaEmailAlert(message, server)
 
     expect(sendEmail).toHaveBeenCalledTimes(1)
 

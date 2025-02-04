@@ -6,9 +6,7 @@ import {
   shouldSendAlert
 } from '~/src/listeners/grafana/pagerduty/handle-grafana-pagerduty-alerts.js'
 import { serviceToPagerDutyServiceOverride } from '~/src/config/pagerduty-service-override.js'
-import { pino } from 'pino'
 import { fetchService } from '~/src/helpers/fetch/fetch-service.js'
-import { logger } from '@azure/identity'
 import { config } from '~/src/config/index.js'
 import { sendAlert } from '~/src/helpers/pagerduty/send-alert.js'
 
@@ -58,18 +56,29 @@ describe('#shouldSendAlert', () => {
       alert.environment = env
       expect(shouldSendAlert(alert, envsToAlert)).toBe(true)
     }
+    expect.hasAssertions()
 
     for (const env of envsToNotAlert) {
       alert.environment = env
       expect(shouldSendAlert(alert, envsToAlert)).toBe(false)
     }
+    expect.hasAssertions()
   })
 
   test('should override environments from config', () => {
     const alert = {
       environment: 'dev',
       team: 'test',
-      service: 'foo'
+      service: 'foo',
+      alertName: 'test-alert',
+      status: 'critical',
+      startsAt: '2025-02-03T11:14:25.507Z',
+      endsAt: '2025-02-03T11:14:25.507Z',
+      summary: 'an alert happened',
+      description: 'it broke',
+      series: '1',
+      runbookUrl: '',
+      alertURL: ''
     }
 
     const customEnvs = ['dev', 'test']
@@ -133,8 +142,7 @@ describe('#sendAlertsToPagerduty', () => {
   })
 
   test('getTeams should use the overrides when configured', async () => {
-    const logger = pino({})
-    const res = await getTeams({ service: 'cdp-lambda' }, logger)
+    const res = await getTeams({ service: 'cdp-lambda' })
     expect(res).toBe(serviceToPagerDutyServiceOverride['cdp-lambda'].teams)
   })
 
@@ -143,14 +151,14 @@ describe('#sendAlertsToPagerduty', () => {
       .mocked(fetchService)
       .mockResolvedValue({ teams: [{ name: 'Platform' }, { name: 'Support' }] })
 
-    const res = await getTeams({ service: 'test-service' }, logger)
+    const res = await getTeams({ service: 'test-service' })
     expect(res).toEqual(['Platform', 'Support'])
   })
 
   test('getTeams should returns an empty array when the service is not found', async () => {
     jest.mocked(fetchService).mockResolvedValue(null)
 
-    const res = await getTeams({ service: 'test-service' }, logger)
+    const res = await getTeams({ service: 'test-service' })
     expect(res).toEqual([])
   })
 
@@ -164,16 +172,16 @@ describe('#sendAlertsToPagerduty', () => {
     config.set(`pagerduty.teams.${team}.integrationKey`, integrationKey)
     config.set('pagerduty.sendAlerts', true)
 
-    const server = { logger: pino({}) }
     const payload = {
       service,
       environment: 'prod',
       status: 'firing'
     }
     const message = {
+      MessageId: '123',
       Body: JSON.stringify(payload)
     }
-    await handleGrafanaPagerDutyAlert(message, server)
+    await handleGrafanaPagerDutyAlert(message)
 
     expect(fetchService).toHaveBeenCalledWith(service)
     expect(sendAlert).toHaveBeenCalledWith(

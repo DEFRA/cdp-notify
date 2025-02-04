@@ -70,7 +70,7 @@ const grafanaAlertListener = {
         server.logger.error(error, `SQS ${queueUrl}: ${error.message}`)
       }
       try {
-        await handleGrafanaPagerDutyAlert(message, server)
+        await handleGrafanaPagerDutyAlert(message)
         const receiptHandle = message.ReceiptHandle
         await deleteSqsMessage(server.sqs, queueUrl, receiptHandle)
       } catch (error) {

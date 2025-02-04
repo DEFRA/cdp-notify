@@ -35,6 +35,9 @@ const serviceToPagerDutyServiceOverride = {
   },
   'cdp-waf': {
     teams: ['platform']
+  },
+  'cdp-canary': {
+    teams: ['platform-tenant-cko']
   }
 }
 

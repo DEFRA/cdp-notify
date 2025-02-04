@@ -1,8 +1,9 @@
 import { config } from '~/src/config/index.js'
 
 /**
+ * Fetch Service info from portal backend.
  * @param {string} name
- * @returns {Promise<{teams: [{teamId: string}] }|null>}
+ * @returns {Promise<{teams: [{name: string}] }|null>}
  */
 async function fetchService(name) {
   const endpoint = config.get('portalBackendUrl') + `/services/${name}`

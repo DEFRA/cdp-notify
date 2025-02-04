@@ -377,6 +377,14 @@ const config = convict({
           default: 'key',
           env: 'PLATFORM_INTEGRATION_KEY'
         }
+      },
+      'platform-tenant-cko': {
+        integrationKey: {
+          doc: 'Integration key for digital service',
+          format: String,
+          default: 'key',
+          env: 'PLATFORM_TENANT_CKO_INTEGRATION_KEY'
+        }
       }
     },
     services: {

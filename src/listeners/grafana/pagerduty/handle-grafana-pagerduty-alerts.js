@@ -127,13 +127,9 @@ export async function handleGrafanaPagerDutyAlert(message) {
     return
   }
 
-  logger.info(
-    `Grafana alert ${payload.status} for ${payload.service} in ${payload.environment} - Alert: ${payload.alertName} MessageId: ${message.MessageId}`
-  )
+  logger.info(`Grafana alert: ${message.Body}`)
 
   if (config.get('pagerduty.sendAlerts')) {
-    logger.info('Sending PagerDuty alert')
-
     let eventAction
 
     if (payload.status === 'firing') {
@@ -148,7 +144,9 @@ export async function handleGrafanaPagerDutyAlert(message) {
     }
 
     const dedupeKey = createDedupeKey(payload)
-
+    logger.info(
+      `sending pager duty alert for service:${payload.service} eventAction:${eventAction} alert:${payload.alertName} dedupe:${dedupeKey} to ${integrationKeys.length} integrations`
+    )
     const alerts = integrationKeys.map(async (integrationKey) => {
       await sendAlert(integrationKey, payload, teams, dedupeKey, eventAction)
     })

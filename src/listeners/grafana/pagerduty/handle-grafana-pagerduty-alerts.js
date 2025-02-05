@@ -10,11 +10,11 @@ const logger = createLogger()
 
 /**
  * Generates a pagerduty dedupe key based off the message's content.
- * @param {{summary: string, service: string, environment: string, startsAt: string}|null} payload
+ * @param {{summary: string, service: string, environment: string, alertURL: string}|null} payload
  * @returns {string}
  */
 export function createDedupeKey(payload) {
-  const str = `${payload?.summary}${payload?.service}${payload?.environment}${payload?.startsAt}`
+  const str = `${payload?.service}${payload?.environment}${payload?.alertURL}`
   return crypto.createHash('md5').update(str).digest('hex')
 }
 
@@ -148,7 +148,18 @@ export async function handleGrafanaPagerDutyAlert(message) {
       `sending pager duty alert for service:${payload.service} eventAction:${eventAction} alert:${payload.alertName} dedupe:${dedupeKey} to ${integrationKeys.length} integrations`
     )
     const alerts = integrationKeys.map(async (integrationKey) => {
-      await sendAlert(integrationKey, payload, teams, dedupeKey, eventAction)
+      const resp = await sendAlert(
+        integrationKey,
+        payload,
+        teams,
+        dedupeKey,
+        eventAction
+      )
+      const respText = await resp.text()
+
+      logger.info(
+        `sending pager duty alert service:${payload.service} eventAction:${eventAction} alert:${payload.alertName} dedupe:${dedupeKey}. grafana: ${message.Body}. pagerdutyResponse: ${respText}`
+      )
     })
     const result = await Promise.allSettled(alerts)
     result

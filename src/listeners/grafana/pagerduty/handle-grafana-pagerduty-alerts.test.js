@@ -12,13 +12,38 @@ import { sendAlert } from '~/src/helpers/pagerduty/send-alert.js'
 
 describe('#createDedupeKey', () => {
   test('should create the same md5 string for identical payloads', () => {
-    const payload = {
-      summary: 'test',
-      service: 'foo',
-      environment: 'dev',
-      startsAt: '2025-02-03T11:14:25.507Z'
+    const msg1 = {
+      environment: 'prod',
+      team: 'Platform-test',
+      service: 'cdp-canary-deployment-backend',
+      alertName: 'cdp-canary-deployment-backend-ecs-running-tasks',
+      status: 'resolved',
+      startsAt: '2025-02-05 14:24:10 +0000 UTC',
+      endsAt: '2025-02-05 14:24:10 +0000 UTC',
+      summary: 'Number of ECS tasks running is below 1',
+      description: '',
+      series: 'RunningTaskCount',
+      runbookUrl: '',
+      alertURL:
+        'https://metrics.prod.cdp-int.defra.cloud/alerting/grafana/eec2a2i238d8ge/view'
     }
-    expect(createDedupeKey(payload)).toEqual(createDedupeKey(payload))
+
+    const msg2 = {
+      environment: 'prod',
+      team: 'Platform-test',
+      service: 'cdp-canary-deployment-backend',
+      alertName: 'cdp-canary-deployment-backend-ecs-running-tasks',
+      status: 'firing',
+      startsAt: '2025-02-05 14:18:40 +0000 UTC',
+      endsAt: '0001-01-01 00:00:00 +0000 UTC',
+      summary: 'Number of ECS tasks running is below 1',
+      description: '',
+      series: 'RunningTaskCount',
+      runbookUrl: '',
+      alertURL:
+        'https://metrics.prod.cdp-int.defra.cloud/alerting/grafana/eec2a2i238d8ge/view'
+    }
+    expect(createDedupeKey(msg1)).toEqual(createDedupeKey(msg2))
   })
 
   test('should handle malformed payloads gracefully', () => {
@@ -167,7 +192,7 @@ describe('#sendAlertsToPagerduty', () => {
     const team = 'team1'
     const service = 'service1'
     jest.mocked(fetchService).mockResolvedValue({ teams: [{ name: team }] })
-    jest.mocked(sendAlert).mockResolvedValue(null)
+    jest.mocked(sendAlert).mockResolvedValue({ text: () => 'ok' })
 
     config.set(`pagerduty.teams.${team}.integrationKey`, integrationKey)
     config.set('pagerduty.sendAlerts', true)

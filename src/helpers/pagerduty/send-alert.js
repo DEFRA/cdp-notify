@@ -38,6 +38,7 @@ async function sendAlert(integrationKey, alert, teams, dedupeKey, eventAction) {
       `HTTP Error Response: ${response.status} ${response.statusText}`
     )
   }
+  return response
 }
 
 export { sendAlert }

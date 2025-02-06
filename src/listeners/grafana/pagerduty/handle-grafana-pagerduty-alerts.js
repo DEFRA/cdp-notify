@@ -96,6 +96,14 @@ export function findIntegrationKeyForService(alert) {
 export async function handleGrafanaPagerDutyAlert(message) {
   const payload = JSON.parse(message.Body)
 
+  // reject alerts that are not flagged for pagerDuty
+  if (payload?.pagerDuty !== 'true') {
+    logger.info(
+      `ignoring alert ${message.MessageId} does not have a pagerDuty=true label`
+    )
+    return
+  }
+
   if (!shouldSendAlert(payload, config.get('alertEnvironments'))) {
     return
   }

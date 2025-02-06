@@ -151,6 +151,7 @@ export { handleGrafanaEmailAlert }
  * @property {string} team
  * @property {string} service
  * @property {string} alertName
+ * @property {string} pagerDuty
  * @property {string} status
  * @property {string} startsAt
  * @property {string} endsAt

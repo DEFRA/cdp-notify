@@ -4,15 +4,7 @@ import { workflowRunNotificationHandler } from '~/src/listeners/github/workflow-
 const gitHubRepoConfig = config.get('github.repos')
 const gitHubWorkflowConfig = config.get('github.failedWorkflows')
 
-const githubWebhooks = new Set([
-  gitHubRepoConfig.appDeployments,
-  gitHubRepoConfig.cdpTfSvcInfra,
-  gitHubRepoConfig.cdpAppConfig,
-  gitHubRepoConfig.cdpNginxUpstreams,
-  gitHubRepoConfig.createWorkflows,
-  gitHubRepoConfig.cdpSquidProxy,
-  gitHubRepoConfig.cdpGrafanaSvc
-])
+const createWorkflowRepos = new Set(gitHubWorkflowConfig.createService.repos)
 
 const shouldProcessCreateWorkflows = (message) => {
   if (message?.github_event === 'workflow_run') {
@@ -22,7 +14,7 @@ const shouldProcessCreateWorkflows = (message) => {
       repoName === gitHubRepoConfig.cdpTfSvcInfra &&
       workflowName.toLocaleLowerCase().includes('infra-dev')
 
-    return githubWebhooks.has(repoName) && !infraDevTfSvcInfraRun
+    return createWorkflowRepos.has(repoName) && !infraDevTfSvcInfraRun
   }
   return false
 }
@@ -34,6 +26,16 @@ const shouldProcessPortalJourneyTests = (message) => {
   )
 }
 
+const infraWorkflowRepos = new Set(gitHubWorkflowConfig.infra.repos)
+
+const shouldProcessInfraWorkflows = (message) => {
+  if (message?.github_event === 'workflow_run') {
+    const repoName = message.repository?.name
+    return infraWorkflowRepos.has(repoName)
+  }
+  return false
+}
+
 const handle = async (server, message) => {
   if (shouldProcessCreateWorkflows(message)) {
     const slackChannel = gitHubWorkflowConfig.createService.slackChannel
@@ -42,6 +44,11 @@ const handle = async (server, message) => {
 
   if (shouldProcessPortalJourneyTests(message)) {
     const slackChannel = gitHubWorkflowConfig.portalJourney.slackChannel
+    await workflowRunNotificationHandler(server, message, slackChannel)
+  }
+
+  if (shouldProcessInfraWorkflows(message)) {
+    const slackChannel = gitHubWorkflowConfig.infra.slackChannel
     await workflowRunNotificationHandler(server, message, slackChannel)
   }
 }

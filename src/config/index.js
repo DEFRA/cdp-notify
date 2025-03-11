@@ -243,55 +243,66 @@ const config = convict({
   },
   github: {
     repos: {
-      cdpAppConfig: {
-        doc: 'GitHub repo for cdp-app-config',
-        format: String,
-        default: 'cdp-app-config',
-        env: 'GITHUB_REPO_APP_CONFIG'
-      },
-      cdpNginxUpstreams: {
-        doc: 'GitHub repo for cdp-nginx-upstreams',
-        format: String,
-        default: 'cdp-nginx-upstreams',
-        env: 'GITHUB_REPO_NGINX_UPSTREAMS'
-      },
       cdpTfSvcInfra: {
         doc: 'GitHub repo for cdp-tf-svc-infra',
         format: String,
         default: 'cdp-tf-svc-infra',
         env: 'GITHUB_REPO_TF_SVC_INFRA'
-      },
-      cdpGrafanaSvc: {
-        doc: 'GitHub repo to create default dashboard config in',
-        format: String,
-        default: 'cdp-grafana-svc',
-        env: 'GITHUB_REPO_DASHBOARDS'
-      },
-      cdpSquidProxy: {
-        doc: 'GitHub repo to create default dashboard config in',
-        format: String,
-        default: 'cdp-squid-proxy',
-        env: 'GITHUB_REPO_SQUID_PROXY'
-      },
-      createWorkflows: {
-        doc: 'GitHub repository containing the create workflows',
-        format: String,
-        default: 'cdp-create-workflows',
-        env: 'GITHUB_REPO_CREATE_WORKFLOWS'
-      },
-      appDeployments: {
-        doc: 'Repository to store deployment state for services on CDP',
-        format: String,
-        default: 'cdp-app-deployments'
       }
     },
     failedWorkflows: {
+      infra: {
+        slackChannel: {
+          doc: 'Slack Channel for failed infra workflows',
+          format: String,
+          default: 'cdp-infra-workflow-failures',
+          env: 'INFRA_FLOW_SLACK_CHANNEL'
+        },
+        repos: {
+          doc: 'List of repos',
+          format: Array,
+          default: [
+            'cdp-iam-users',
+            'cdp-tf-core',
+            'cdp-tf-svc-infra',
+            'cdp-tf-modules',
+            'cdp-tf-pagerduty',
+            'cdp-tf-vanity-urls',
+            'cdp-waf',
+            'cdp-grafana-core',
+            'cdp-grafana-modules',
+            'cdp-grafana-svc',
+            'cdp-opensearch-core',
+            'cdp-opensearch-svc',
+            'cdp-clamav-docker',
+            'cdp-percona-mongo',
+            'cdp-ssl-sidecar',
+            'cdp-squid-proxy',
+            'cdp-nginx-upstreams'
+          ],
+          env: 'INFRA_FLOW_REPOS'
+        }
+      },
       createService: {
         slackChannel: {
           doc: 'Slack Channel for failed workflows involved in creating a service',
           format: String,
           default: 'cdp-platform-alerts',
           env: 'CREATE_FLOW_SLACK_CHANNEL'
+        },
+        repos: {
+          doc: 'List of repos',
+          format: Array,
+          default: [
+            'cdp-nginx-upstreams',
+            'cdp-tf-svc-infra',
+            'cdp-grafana-svc',
+            'cdp-squid-proxy',
+            'cdp-create-workflows',
+            'cdp-app-config',
+            'cdp-app-deployments'
+          ],
+          env: 'CREATE_FLOW_REPOS'
         }
       },
       portalJourney: {

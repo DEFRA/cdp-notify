@@ -54,7 +54,7 @@ export async function getTeams(alert) {
     return []
   }
 
-  return service.teams.map((team) => team.name)
+  return service.teams.map((team) => team.name.toLowerCase())
 }
 
 /**

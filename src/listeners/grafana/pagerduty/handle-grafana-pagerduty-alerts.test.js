@@ -177,7 +177,7 @@ describe('#sendAlertsToPagerduty', () => {
       .mockResolvedValue({ teams: [{ name: 'Platform' }, { name: 'Support' }] })
 
     const res = await getTeams({ service: 'test-service' })
-    expect(res).toEqual(['Platform', 'Support'])
+    expect(res).toEqual(['platform', 'support'])
   })
 
   test('getTeams should returns an empty array when the service is not found', async () => {

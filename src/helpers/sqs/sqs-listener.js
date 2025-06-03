@@ -67,14 +67,19 @@ const grafanaAlertListener = {
       try {
         await handleGrafanaEmailAlert(message, server)
       } catch (error) {
-        server.logger.error(error, `SQS ${queueUrl}: ${error.message}`)
+        server.logger.info(`Message body: ${message.Body}`)
+        server.logger.error(error, `Email - SQS ${queueUrl}: ${error.message}`)
       }
       try {
         await handleGrafanaPagerDutyAlert(message)
         const receiptHandle = message.ReceiptHandle
         await deleteSqsMessage(server.sqs, queueUrl, receiptHandle)
       } catch (error) {
-        server.logger.error(error, `SQS ${queueUrl}: ${error.message}`)
+        server.logger.info(`Message body: ${message.Body}`)
+        server.logger.error(
+          error,
+          `PagerDuty - SQS ${queueUrl}: ${error.message}`
+        )
       }
     }
   }

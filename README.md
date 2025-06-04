@@ -77,7 +77,7 @@ Redeploy the service.
 
 ### Sending alerts for non-tenant services
 
-To send pager duty alerts for non-tenant services (e.g. mongodb, lambdas, workflows etc) add a new entry to `pagerduty-service-override.js`.
+To send pager duty alerts for non-tenant services (e.g. mongodb, lambdas, workflows etc) add a new entry to `service-override.js`.
 
 ```
 {

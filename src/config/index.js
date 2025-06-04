@@ -389,6 +389,14 @@ const config = convict({
           env: 'PLATFORM_INTEGRATION_KEY'
         }
       },
+      'Trade-Data-Matching': {
+        integrationKey: {
+          doc: 'Integration key for digital service',
+          format: String,
+          default: 'key',
+          env: 'TRADE_DATA_MATCHING_INTEGRATION_KEY'
+        }
+      },
       'platform-tenant-cko': {
         integrationKey: {
           doc: 'Integration key for digital service',

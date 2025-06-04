@@ -64,22 +64,28 @@ const grafanaAlertListener = {
   options: {
     config: config.get('sqsGrafanaAlerts'),
     messageHandler: async (message, queueUrl, server) => {
+      const createAlertLogger = (message, category, logger) =>
+        logger.child({
+          event: {
+            kind: message.Body,
+            category,
+            reference: message.MessageId
+          }
+        })
+
+      let logger = createAlertLogger(message, 'email', server.logger)
       try {
-        await handleGrafanaEmailAlert(message, server)
+        await handleGrafanaEmailAlert(message, logger, server.msGraph)
       } catch (error) {
-        server.logger.info(`Message body: ${message.Body}`)
-        server.logger.error(error, `Email - SQS ${queueUrl}: ${error.message}`)
+        logger.error(error, `Email - SQS ${queueUrl}: ${error.message}`)
       }
+      logger = createAlertLogger(message, 'PagerDuty', server.logger)
       try {
-        await handleGrafanaPagerDutyAlert(message)
+        await handleGrafanaPagerDutyAlert(message, logger)
         const receiptHandle = message.ReceiptHandle
         await deleteSqsMessage(server.sqs, queueUrl, receiptHandle)
       } catch (error) {
-        server.logger.info(`Message body: ${message.Body}`)
-        server.logger.error(
-          error,
-          `PagerDuty - SQS ${queueUrl}: ${error.message}`
-        )
+        logger.error(error, `PagerDuty - SQS ${queueUrl}: ${error.message}`)
       }
     }
   }

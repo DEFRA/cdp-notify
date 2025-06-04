@@ -8,7 +8,7 @@
 //     environments: [environments.management, environments.prod],
 //     technicalService: 'my_service'
 //   }
-const serviceToPagerDutyServiceOverride = {
+const serviceToTeamOverride = {
   'cdp-backup': {
     teams: ['platform']
   },
@@ -41,4 +41,4 @@ const serviceToPagerDutyServiceOverride = {
   }
 }
 
-export { serviceToPagerDutyServiceOverride }
+export { serviceToTeamOverride }

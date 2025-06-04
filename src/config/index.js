@@ -381,6 +381,7 @@ const config = convict({
       env: 'SEND_PAGERDUTY_ALERT'
     },
     teams: {
+      // Team names must be lowercase
       platform: {
         integrationKey: {
           doc: 'Integration key for digital service',
@@ -389,7 +390,7 @@ const config = convict({
           env: 'PLATFORM_INTEGRATION_KEY'
         }
       },
-      'Trade-Data-Matching': {
+      'trade-data-matching': {
         integrationKey: {
           doc: 'Integration key for digital service',
           format: String,

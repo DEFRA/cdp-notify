@@ -1,7 +1,6 @@
 import {
   createDedupeKey,
   findIntegrationKeyForService,
-  getTeams,
   handleGrafanaPagerDutyAlert,
   shouldSendAlert
 } from '~/src/listeners/grafana/pagerduty/handle-grafana-pagerduty-alerts.js'
@@ -167,27 +166,6 @@ describe('#sendAlertsToPagerduty', () => {
     jest.clearAllMocks()
   })
 
-  test('getTeams should use the overrides when configured', async () => {
-    const res = await getTeams('cdp-lambda', createLogger())
-    expect(res).toBe(serviceToTeamOverride['cdp-lambda'].teams)
-  })
-
-  test('getTeams should looks up the team in portal-backend', async () => {
-    jest
-      .mocked(fetchService)
-      .mockResolvedValue({ teams: [{ name: 'Platform' }, { name: 'Support' }] })
-
-    const res = await getTeams('test-service')
-    expect(res).toEqual(['platform', 'support'])
-  })
-
-  test('getTeams should returns an empty array when the service is not found', async () => {
-    jest.mocked(fetchService).mockResolvedValue(null)
-
-    const res = await getTeams('test-service', createLogger())
-    expect(res).toEqual([])
-  })
-
   test('should trigger pagerduty message when grafana alert is fired', async () => {
     const integrationKey = '1234567890'
     const team = 'team1'
@@ -204,32 +182,18 @@ describe('#sendAlertsToPagerduty', () => {
       status: 'firing',
       pagerDuty: 'true'
     }
-    const message = {
-      MessageId: '123',
-      Body: JSON.stringify(grafanaAlert)
-    }
-
-    const payload = {
-      custom_details: {
-        environment: 'prod',
-        service: 'service1',
-        teams: ['team1']
-      },
-      severity: 'critical',
-      source: 'grafana',
-      summary: undefined,
-      timestamp: undefined
-    }
-
-    await handleGrafanaPagerDutyAlert(message, createLogger())
+    const logger = createLogger()
+    await handleGrafanaPagerDutyAlert(grafanaAlert, logger)
 
     expect(fetchService).toHaveBeenCalledWith(service1)
     expect(sendAlert).toHaveBeenCalledWith(
-      payload,
+      grafanaAlert,
+      ['team1'],
+      'trigger',
+      undefined,
       expect.any(String),
       integrationKey,
-      'trigger',
-      undefined
+      logger
     )
   })
 
@@ -248,11 +212,8 @@ describe('#sendAlertsToPagerduty', () => {
       environment: 'prod',
       status: 'firing'
     }
-    const message = {
-      MessageId: '123',
-      Body: JSON.stringify(grafanaAlert)
-    }
-    await handleGrafanaPagerDutyAlert(message, createLogger())
+
+    await handleGrafanaPagerDutyAlert(grafanaAlert, createLogger())
 
     expect(fetchService).not.toHaveBeenCalled()
     expect(sendAlert).not.toHaveBeenCalled()
@@ -272,11 +233,8 @@ describe('#sendAlertsToPagerduty', () => {
       status: 'firing',
       pagerDuty: 'true'
     }
-    const message = {
-      MessageId: '123',
-      Body: JSON.stringify(grafanaAlert)
-    }
-    await handleGrafanaPagerDutyAlert(message, createLogger())
+
+    await handleGrafanaPagerDutyAlert(grafanaAlert, createLogger())
 
     expect(fetchService).toHaveBeenCalledWith(service3)
     expect(sendAlert).not.toHaveBeenCalled()
@@ -298,32 +256,19 @@ describe('#sendAlertsToPagerduty', () => {
       status: 'firing',
       pagerDuty: 'true'
     }
-    const message = {
-      MessageId: '123',
-      Body: JSON.stringify(grafanaAlert)
-    }
 
-    const payload = {
-      custom_details: {
-        environment: 'prod',
-        service: 'service4',
-        teams: ['team4']
-      },
-      severity: 'critical',
-      source: 'grafana',
-      summary: undefined,
-      timestamp: undefined
-    }
-
-    await handleGrafanaPagerDutyAlert(message, createLogger())
+    const logger = createLogger()
+    await handleGrafanaPagerDutyAlert(grafanaAlert, logger)
 
     expect(fetchService).toHaveBeenCalledWith(service4)
     expect(sendAlert).toHaveBeenCalledWith(
-      payload,
+      grafanaAlert,
+      ['team4'],
+      'trigger',
+      undefined,
       expect.any(String),
       integrationKey,
-      'trigger',
-      undefined
+      logger
     )
   })
 })

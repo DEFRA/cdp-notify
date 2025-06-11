@@ -381,8 +381,7 @@ const config = convict({
       env: 'SEND_PAGERDUTY_ALERT'
     },
     teams: {
-      // Team names must be lowercase
-      platform: {
+      Platform: {
         integrationKey: {
           doc: 'Integration key for digital service',
           format: String,
@@ -390,7 +389,7 @@ const config = convict({
           env: 'PLATFORM_INTEGRATION_KEY'
         }
       },
-      'trade-data-matching': {
+      'Trade-Data-Matching': {
         integrationKey: {
           doc: 'Integration key for digital service',
           format: String,
@@ -398,7 +397,7 @@ const config = convict({
           env: 'TRADE_DATA_MATCHING_INTEGRATION_KEY'
         }
       },
-      'platform-tenant-cko': {
+      'Platform-Tenant-Cko': {
         integrationKey: {
           doc: 'Integration key for digital service',
           format: String,
@@ -407,80 +406,7 @@ const config = convict({
         }
       }
     },
-    services: {
-      'cdp-backup': {
-        integrationKey: {
-          doc: 'Integration key for digital service',
-          format: String,
-          default: 'key',
-          env: 'CDP_BACKUP_INTEGRATION_KEY'
-        }
-      },
-      'cdp-elasticache': {
-        integrationKey: {
-          doc: 'Integration key for digital service',
-          format: String,
-          default: 'key',
-          env: 'CDP_ELASTICACHE_INTEGRATION_KEY'
-        }
-      },
-      'cdp-lambda': {
-        integrationKey: {
-          doc: 'Integration key for digital service',
-          format: String,
-          default: 'key',
-          env: 'CDP_LAMBDA_INTEGRATION_KEY'
-        }
-      },
-      'cdp-nginx-proxy': {
-        integrationKey: {
-          doc: 'Integration key for digital service',
-          format: String,
-          default: 'key',
-          env: 'CDP_NGINX_PROXY_INTEGRATION_KEY'
-        }
-      },
-      'cdp-opensearch-cluster': {
-        integrationKey: {
-          doc: 'Integration key for digital service',
-          format: String,
-          default: 'key',
-          env: 'CDP_OPENSEARCH_CLUSTER_INTEGRATION_KEY'
-        }
-      },
-      'cdp-opensearch-ingestion': {
-        integrationKey: {
-          doc: 'Integration key for digital service',
-          format: String,
-          default: 'key',
-          env: 'CDP_OPENSEARCH_INGESTION_INTEGRATION_KEY'
-        }
-      },
-      'cdp-protected-mongo': {
-        integrationKey: {
-          doc: 'Integration key for digital service',
-          format: String,
-          default: 'key',
-          env: 'CDP_PROTECTED_MONGO_INTEGRATION_KEY'
-        }
-      },
-      'cdp-squid-proxy': {
-        integrationKey: {
-          doc: 'Integration key for digital service',
-          format: String,
-          default: 'key',
-          env: 'CDP_SQUID_PROXY_INTEGRATION_KEY'
-        }
-      },
-      'cdp-waf': {
-        integrationKey: {
-          doc: 'Integration key for digital service',
-          format: String,
-          default: 'key',
-          env: 'CDP_WAF_INTEGRATION_KEY'
-        }
-      }
-    }
+    services: {}
   }
 })
 

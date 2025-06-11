@@ -1,9 +1,8 @@
 import { config } from '~/src/config/index.js'
 import { sendEmail } from '~/src/helpers/ms-graph/send-email.js'
-import { fetchTeam } from '~/src/helpers/fetch/fetch-team.js'
-import { fetchService } from '~/src/helpers/fetch/fetch-service.js'
 import { renderEmail } from '~/src/helpers/nunjucks/render-email.js'
-import { serviceToTeamOverride } from '~/src/config/service-override.js'
+import { getTeams } from '~/src/helpers/get-teams.js'
+import { fetchTeam } from '~/src/helpers/fetch/fetch-team.js'
 
 const sendEmailAlerts = config.get('sendEmailAlerts')
 const sender = config.get('senderEmailAddress')
@@ -24,36 +23,21 @@ function shouldSendAlert(alert) {
   return alertEnvironments.includes(alert.environment)
 }
 
-async function getTeams(serviceName, logger) {
-  const override = serviceToTeamOverride[serviceName]?.teams
-
-  if (override) {
-    return override
-  }
-
-  const service = await fetchService(serviceName)
-  if (!service?.teams) {
-    logger.info(`service ${serviceName} was not found`)
-    return []
-  }
-
-  const teams = service.teams.map(async (team) => await fetchTeam(team.teamId))
-
-  return await Promise.all(teams)
-}
-
 /**
  * @param {Alert} alert
  * @param {Logger} logger
  * @returns {Promise<*[string]>}
  */
 async function findContactsForAlert(alert, logger) {
-  const teams = await getTeams(alert.service, logger)
+  const serviceTeams = await getTeams(alert.service, logger)
 
-  const contacts = teams.map((team) =>
-    team.team?.alertEmailAddresses?.length ? team.team.alertEmailAddresses : []
-  )
-  const uniqueContacts = [...new Set(contacts.flat())]
+  const teams = serviceTeams.map(async (team) => await fetchTeam(team.teamId))
+
+  const contacts = (await Promise.all(teams))
+    .map((t) => t.team?.alertEmailAddresses || [])
+    .flat() // flatten nested arrays into one
+
+  const uniqueContacts = [...new Set(contacts)]
 
   logger.info(
     `found ${uniqueContacts.length} alert email addresses for ${alert.service}`
@@ -61,39 +45,35 @@ async function findContactsForAlert(alert, logger) {
   return uniqueContacts
 }
 
-async function handleGrafanaEmailAlert(message, logger, msGraph) {
-  const payload = JSON.parse(message.Body)
-
-  if (!shouldSendAlert(payload)) {
+async function handleGrafanaEmailAlert(alert, logger, msGraph) {
+  if (!shouldSendAlert(alert)) {
     return
   }
 
-  if (!payload?.service) {
+  if (!alert?.service) {
     logger.warn(`alert did not contain a service field`)
     return []
   }
 
   let email
-  if (payload.status === 'firing') {
-    email = generateFiringEmail(payload)
-  } else if (payload.status === 'resolved') {
-    email = generateResolvedEmail(payload)
+  if (alert.status === 'firing') {
+    email = generateFiringEmail(alert)
+  } else if (alert.status === 'resolved') {
+    email = generateResolvedEmail(alert)
   } else {
-    logger.warn(`Unexpected status ${payload.status} not sending alert`)
+    logger.warn(`Unexpected status ${alert.status} not sending alert`)
     return
   }
 
-  const contacts = await findContactsForAlert(payload, logger)
+  const contacts = await findContactsForAlert(alert, logger)
   if (!contacts?.length) {
-    logger.info(
-      `No contact details found ${payload.service}. Not sending alert`
-    )
+    logger.info(`No contact details found ${alert.service}. Not sending alert`)
     return
   }
 
   logger.debug(`Sending alert to ${contacts.join(',')}`)
   logger.info(
-    `Grafana alert ${payload.status} for ${payload.service} in ${payload.environment} - Alert: ${payload.alertName}`
+    `Grafana alert ${alert.status} for ${alert.service} in ${alert.environment} - Alert: ${alert.alertName}`
   )
 
   if (sendEmailAlerts) {

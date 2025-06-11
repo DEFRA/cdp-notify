@@ -1,9 +1,9 @@
 import { config } from '~/src/config/index.js'
 import { serviceToTeamOverride } from '~/src/config/service-override.js'
 import { sendAlert } from '~/src/helpers/pagerduty/send-alert.js'
-import { fetchService } from '~/src/helpers/fetch/fetch-service.js'
 
 import crypto from 'crypto'
+import { getTeams } from '~/src/helpers/get-teams.js'
 
 /**
  * Generates a pagerduty dedupe key based off the message's content.
@@ -26,29 +26,6 @@ export function shouldSendAlert(alert, environments) {
 
   const alertEnvironments = overrides || environments
   return alertEnvironments.includes(alert.environment)
-}
-
-/**
- * Gets the teams associated to an alert.
- * Uses overrides first if set, otherwise uses owners of service from portal-backend.
- * @param {string} serviceName
- * @param {Logger} logger
- * @returns {Promise<string[]>}
- */
-export async function getTeams(serviceName, logger) {
-  const teams = serviceToTeamOverride[serviceName]?.teams
-
-  if (teams) {
-    return teams
-  }
-
-  const service = await fetchService(serviceName)
-  if (!service?.teams) {
-    logger.info(`service ${serviceName} was not found`)
-    return []
-  }
-
-  return service.teams.map((team) => team.name.toLowerCase())
 }
 
 /**
@@ -81,57 +58,58 @@ export function findIntegrationKeyForService(alert) {
   }
 }
 
-function outcomeLogger(outcome, payload, logger) {
-  return logger.child({
-    event: {
-      outcome
-    },
-    tenant: {
-      message: payload
-    }
-  })
+function eventLogger(logger) {
+  return (outcome, reason) =>
+    logger.child({
+      event: {
+        outcome,
+        ...(reason && { reason })
+      }
+    })
 }
 
 /**
  *
- * @param {{MessageId: string, Body: string}} message
+ * @param {object} alert
  * @param {Logger} logger
  * @returns {Promise<void>}
  */
-export async function handleGrafanaPagerDutyAlert(message, logger) {
-  const grafanaAlert = JSON.parse(message.Body)
+export async function handleGrafanaPagerDutyAlert(alert, logger) {
+  const noAlertLogger = (reason) => eventLogger(logger)('No alert sent', reason)
 
   // reject alerts that are not flagged for pagerDuty
-  if (grafanaAlert?.pagerDuty !== 'true') {
-    logger.info(`ignoring alert does not have a pagerDuty=true label`)
+  if (alert?.pagerDuty !== 'true') {
+    noAlertLogger('does not have a pagerDuty=true').info(`ignoring alert`)
     return
   }
 
-  if (!shouldSendAlert(grafanaAlert, config.get('alertEnvironments'))) {
+  if (!shouldSendAlert(alert, config.get('alertEnvironments'))) {
     return
   }
 
-  if (!grafanaAlert?.service) {
-    logger.warn(`alert did not contain a service field`)
+  if (!alert?.service) {
+    noAlertLogger('alert did not contain a service field').warn(
+      `no service field`
+    )
     return
   }
 
-  const teams = await getTeams(grafanaAlert.service, logger)
+  const teams = (await getTeams(alert.service, logger)).map((t) => t.name)
 
   const integrationKeys = teams
     .map((team) => findIntegrationKeyForTeam(team))
     .filter((t) => t)
 
   if (integrationKeys.length === 0) {
-    const key = findIntegrationKeyForService(grafanaAlert)
+    const key = findIntegrationKeyForService(alert)
     if (key) {
       integrationKeys.push(key)
     }
   }
 
   if (integrationKeys.length === 0) {
-    logger.info(
-      `No integration key found for ${grafanaAlert.service}. Not sending alert`
+    noAlertLogger(`No integration key found for ${alert.service}.`).info(
+      `No integration key`
     )
     return
   }
@@ -139,58 +117,43 @@ export async function handleGrafanaPagerDutyAlert(message, logger) {
   let eventAction
   let timestamp
 
-  if (grafanaAlert.status === 'firing') {
+  if (alert.status === 'firing') {
     eventAction = 'trigger'
-    timestamp = grafanaAlert.startsAt
-  } else if (grafanaAlert.status === 'resolved') {
+    if (alert.startsAt) {
+      timestamp = new Date(alert?.startsAt.split(' m=')[0]).toISOString()
+    }
+  } else if (alert.status === 'resolved') {
     eventAction = 'resolve'
-    timestamp = grafanaAlert.endsAt
+    if (alert.endsAt) {
+      timestamp = new Date(alert.endsAt.split(' m=')[0]).toISOString()
+    }
   } else {
-    logger.warn(`Unexpected status ${grafanaAlert.status} not sending alert`)
+    noAlertLogger(`Unexpected status ${alert.status}`).warn(`Unexpected status`)
     return
   }
 
-  const dedupeKey = createDedupeKey(grafanaAlert)
-
-  const payload = {
-    timestamp,
-    summary: grafanaAlert.summary,
-    severity: 'critical',
-    source: 'grafana',
-    custom_details: {
-      teams,
-      service: grafanaAlert.service,
-      environment: grafanaAlert.environment
-    }
-  }
+  const dedupeKey = createDedupeKey(alert)
 
   if (config.get('pagerduty.sendAlerts')) {
-    const alerts = integrationKeys.map(async (integrationKey) => {
+    const pagerDutyResponses = integrationKeys.map(async (integrationKey) => {
       const resp = await sendAlert(
-        payload,
+        alert,
+        teams,
+        eventAction,
+        timestamp,
         dedupeKey,
         integrationKey,
-        eventAction,
-        grafanaAlert.alertURL
+        logger
       )
       const respText = await resp.text()
 
-      outcomeLogger('alert sent', payload, logger).info(
-        `sending PagerDuty alert with dedupe ${dedupeKey}. pagerdutyResponse: ${respText}`
+      eventLogger(logger)('alert sent', respText).info(
+        `Alert sent with dedupe ${dedupeKey}`
       )
     })
-    const result = await Promise.allSettled(alerts)
-    result
-      .filter((r) => r.status === 'rejected')
-      .forEach((r) => {
-        outcomeLogger('alert not sent', payload, logger).error(
-          `failed to send pager duty alert! ${r.reason}`
-        )
-      })
+    await Promise.allSettled(pagerDutyResponses)
   } else {
-    outcomeLogger('alert not sent', payload, logger).warn(
-      'NOT Sending PagerDuty alert (sendAlerts disabled in config)'
-    )
+    noAlertLogger('sendAlerts disabled in config').warn('Alert not sent')
   }
 }
 

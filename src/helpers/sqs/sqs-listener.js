@@ -5,6 +5,7 @@ import { handleGrafanaEmailAlert } from '~/src/listeners/grafana/email/handle-gr
 import { deleteSqsMessage } from '~/src/helpers/sqs/delete-sqs-message.js'
 import { handle } from '~/src/listeners/github/message-handler.js'
 import { handleGrafanaPagerDutyAlert } from '~/src/listeners/grafana/pagerduty/handle-grafana-pagerduty-alerts.js'
+import { sendAlertForCdpNotify } from '~/src/helpers/pagerduty/send-alert.js'
 
 /**
  * @typedef {StopOptions} StopOptions
@@ -59,33 +60,64 @@ const sqsListener = {
   }
 }
 
+function filterDuplicateAlerts(list) {
+  const seen = new Set()
+  return list.filter((item) => {
+    const str = `${item?.service}${item?.environment}${item?.alertURL}${item?.status}${item?.startsAt}${item.endsAt}`
+    const hash = crypto.createHash('md5').update(str).digest('hex')
+    if (seen.has(hash)) return false
+    seen.add(item.hash)
+    return true
+  })
+}
+
+function createAlertLogger(message, category, logger) {
+  return logger.child({
+    event: {
+      kind: message.Body,
+      category,
+      reference: message.MessageId
+    }
+  })
+}
+
 const grafanaAlertListener = {
   plugin: sqsListener,
   options: {
     config: config.get('sqsGrafanaAlerts'),
     messageHandler: async (message, queueUrl, server) => {
-      const createAlertLogger = (message, category, logger) =>
-        logger.child({
-          event: {
-            kind: message.Body,
-            category,
-            reference: message.MessageId
-          }
-        })
+      try {
+        const payload = JSON.parse(message.Body)
+        const alerts = filterDuplicateAlerts(
+          Array.isArray(payload) ? payload : [payload]
+        )
 
-      let logger = createAlertLogger(message, 'email', server.logger)
-      try {
-        await handleGrafanaEmailAlert(message, logger, server.msGraph)
+        let logger
+        try {
+          logger = createAlertLogger(message, 'email', server.logger)
+          const emailAlerts = alerts.map(
+            async (alert) =>
+              await handleGrafanaEmailAlert(alert, logger, server.msGraph)
+          )
+          await Promise.all(emailAlerts)
+        } catch (error) {
+          logger.error(error, `Email - SQS ${queueUrl}: ${error.message}`)
+        }
+
+        logger = createAlertLogger(message, 'PagerDuty', server.logger)
+        const pagerDutyAlerts = alerts.map(
+          async (alert) => await handleGrafanaPagerDutyAlert(alert, logger)
+        )
+        await Promise.all(pagerDutyAlerts)
       } catch (error) {
-        logger.error(error, `Email - SQS ${queueUrl}: ${error.message}`)
-      }
-      logger = createAlertLogger(message, 'PagerDuty', server.logger)
-      try {
-        await handleGrafanaPagerDutyAlert(message, logger)
+        const logger = createAlertLogger(message, 'PagerDuty', server.logger)
+        logger.error(error, `PagerDuty - SQS ${queueUrl}: ${error.message}`)
+        await sendAlertForCdpNotify(
+          `Failed to process SQS message: ${error.message}`
+        )
+      } finally {
         const receiptHandle = message.ReceiptHandle
         await deleteSqsMessage(server.sqs, queueUrl, receiptHandle)
-      } catch (error) {
-        logger.error(error, `PagerDuty - SQS ${queueUrl}: ${error.message}`)
       }
     }
   }

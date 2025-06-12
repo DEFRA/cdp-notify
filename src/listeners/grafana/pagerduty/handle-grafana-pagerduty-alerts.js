@@ -85,6 +85,9 @@ export async function handleGrafanaPagerDutyAlert(alert, logger) {
   }
 
   if (!shouldSendAlert(alert, config.get('alertEnvironments'))) {
+    noAlertLogger('environment not configured for alerts').info(
+      `ignoring alert`
+    )
     return
   }
 

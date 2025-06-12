@@ -88,6 +88,7 @@ const grafanaAlertListener = {
     config: config.get('sqsGrafanaAlerts'),
     messageHandler: async (message, queueUrl, server) => {
       try {
+        server.logger.info(`Handling message ${message.MessageId}`)
         const payload = JSON.parse(message.Body)
         const alerts = filterDuplicateAlerts(
           Array.isArray(payload) ? payload : [payload]

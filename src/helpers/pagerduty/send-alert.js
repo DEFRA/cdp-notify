@@ -50,6 +50,7 @@ async function sendAlert(
     logger.error(
       {
         event: {
+          ...logger.bindings().event,
           outcome: 'Alert not sent',
           reason: 'PagerDuty API failure'
         },

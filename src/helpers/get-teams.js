@@ -20,6 +20,7 @@ export async function getTeams(serviceName, logger) {
     logger.info(
       {
         event: {
+          ...logger.bindings().event,
           outcome: 'No alert sent',
           reason: `service ${serviceName} was not found`
         }

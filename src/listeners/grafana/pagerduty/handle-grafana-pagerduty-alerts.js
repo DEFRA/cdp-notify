@@ -62,6 +62,7 @@ function eventLogger(logger) {
   return (outcome, reason) =>
     logger.child({
       event: {
+        ...logger.bindings().event,
         outcome,
         ...(reason && { reason })
       }

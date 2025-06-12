@@ -68,7 +68,7 @@ async function sendAlert(
 async function sendAlertForCdpNotify(summary) {
   const serviceConfig = config.get('service')
   const team = 'Platform'
-  const integrationKey = config.get(`pagerduty.services.${team}.integrationKey`)
+  const integrationKey = config.get(`pagerduty.teams.${team}.integrationKey`)
 
   return await proxyFetch(`${url}/v2/enqueue`, {
     method: 'post',

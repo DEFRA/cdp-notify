@@ -6,6 +6,7 @@ import { deleteSqsMessage } from '~/src/helpers/sqs/delete-sqs-message.js'
 import { handle } from '~/src/listeners/github/message-handler.js'
 import { handleGrafanaPagerDutyAlert } from '~/src/listeners/grafana/pagerduty/handle-grafana-pagerduty-alerts.js'
 import { sendAlertForCdpNotify } from '~/src/helpers/pagerduty/send-alert.js'
+import crypto from 'crypto'
 
 /**
  * @typedef {StopOptions} StopOptions

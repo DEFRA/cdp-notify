@@ -204,6 +204,21 @@ const config = convict({
     default: 'CDP-Alerts@defra.gov.uk',
     env: 'SENDER_EMAIL_ADDRESS'
   },
+  azureFederatedCredentials: {
+    enabled: {
+      doc: 'Use Azure Federated Credentials',
+      format: Boolean,
+      env: 'AZURE_FEDERATED_CREDENTIALS_ENABLED',
+      default: false
+    },
+    identityPoolId: {
+      doc: 'Azure Federated Credential Pool ID',
+      format: String,
+      env: 'AZURE_IDENTITY_POOL_ID',
+      nullable: true,
+      default: null
+    }
+  },
   azureClientBaseUrl: {
     doc: 'MsGraph api endpoint',
     format: String,

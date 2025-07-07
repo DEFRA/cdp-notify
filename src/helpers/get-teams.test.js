@@ -1,5 +1,8 @@
 import { createLogger } from '~/src/helpers/logging/logger.js'
-import { serviceToTeamOverride } from '~/src/config/service-override.js'
+import {
+  serviceToTeamOverride,
+  platform
+} from '~/src/config/service-override.js'
 import { fetchService } from '~/src/helpers/fetch/fetch-service.js'
 import { getTeams } from '~/src/helpers/get-teams.js'
 
@@ -30,5 +33,12 @@ describe('#getTeams', () => {
 
     const res = await getTeams('test-service', createLogger())
     expect(res).toEqual([])
+  })
+
+  test('getTeams should return platform team for a team that starts with cdp but is not in the override', async () => {
+    jest.mocked(fetchService).mockResolvedValue(null)
+
+    const res = await getTeams('cdp-made-up', createLogger())
+    expect(res).toEqual(platform)
   })
 })

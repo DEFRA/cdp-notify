@@ -38,7 +38,9 @@ const serviceToTeamOverride = {
   'cdp-protected-mongo': platform,
   'cdp-squid-proxy': platform,
   'cdp-waf': platform,
+  'cdp-firehose': platform,
+  grafana: platform,
   'cdp-canary-deployment-backend': platformTenantCko
 }
 
-export { serviceToTeamOverride }
+export { serviceToTeamOverride, platform }

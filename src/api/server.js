@@ -15,8 +15,11 @@ import {
 import { msGraphPlugin } from '~/src/helpers/ms-graph/ms-graph.js'
 import { sqsClient } from '~/src/helpers/sqs/sqs-client.js'
 import { snsClient } from '~/src/helpers/sns/sns-client.js'
+import { setupProxy } from '~/src/helpers/proxy.js'
 
 async function createServer() {
+  setupProxy()
+
   const server = hapi.server({
     port: config.get('port'),
     routes: {

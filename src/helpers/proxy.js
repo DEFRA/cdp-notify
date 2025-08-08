@@ -20,7 +20,7 @@ const logger = createLogger()
  * @returns {Proxy|null}
  */
 function provideProxy() {
-  const proxyUrl = config.get('httpProxy')
+  const proxyUrl = config.get('httpsProxy') ?? config.get('httpProxy')
 
   if (!proxyUrl) {
     return null
@@ -30,13 +30,10 @@ function provideProxy() {
   const httpPort = 80
   const httpsPort = 443
   // The url.protocol value always has a colon at the end
-  const defaultPort =
-    url.protocol.toLowerCase() === 'http:' ? httpPort : httpsPort
-  const port = url.port !== '' ? Number(url.port) : defaultPort
+  const port = url.protocol.toLowerCase() === 'http:' ? httpPort : httpsPort
 
-  logger.debug(`Proxy set up using ${url.hostname}:${port}`)
+  logger.debug(`Proxy set up using ${url.origin}:${port}`)
 
-  const httpsProxy = new HttpsProxyAgent(url, {})
   return {
     url,
     port,
@@ -45,7 +42,7 @@ function provideProxy() {
       keepAliveTimeout: 10,
       keepAliveMaxTimeout: 10
     }),
-    httpAndHttpsProxyAgent: httpsProxy
+    httpAndHttpsProxyAgent: new HttpsProxyAgent(url)
   }
 }
 
@@ -56,21 +53,19 @@ function provideProxy() {
  * @returns {Promise}
  */
 function proxyFetch(url, options) {
-  const urlString = typeof url === 'string' ? url : url.toString()
-
   const proxy = provideProxy()
+
   if (!proxy) {
-    logger.debug({ url: urlString }, 'Fetching data')
     return fetch(url, options)
   }
 
   logger.debug(
-    { url: urlString },
-    `Fetching data via the proxy: ${proxy?.url.host}:${proxy.port}`
+    `Fetching: ${url.toString()} via the proxy: ${proxy?.url.origin}:${proxy.port}`
   )
 
   return fetch(url, {
     ...options,
+    // @ts-expect-error dispatcher has not been added to types
     dispatcher: proxy.proxyAgent
   })
 }

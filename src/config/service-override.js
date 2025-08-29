@@ -14,7 +14,7 @@ const platform = {
   teams: [
     {
       name: 'Platform',
-      teamId: '3b202138-1689-4397-8b55-4227362b249d'
+      teamId: 'platform'
     }
   ]
 }
@@ -23,7 +23,7 @@ const platformTenantCko = {
   teams: [
     {
       name: 'Platform-Tenant-Cko',
-      teamId: '3b202138-1689-4397-8b55-4227362b249d'
+      teamId: 'platform'
     }
   ]
 }

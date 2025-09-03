@@ -67,7 +67,7 @@ function filterDuplicateAlerts(list) {
     const str = `${item?.service}${item?.environment}${item?.alertURL}${item?.status}${item?.startsAt}${item.endsAt}`
     const hash = crypto.createHash('md5').update(str).digest('hex')
     if (seen.has(hash)) return false
-    seen.add(item.hash)
+    seen.add(hash)
     return true
   })
 }
@@ -97,9 +97,8 @@ const grafanaAlertListener = {
         let logger
         try {
           logger = createAlertLogger(message, 'email', server.logger)
-          const emailAlerts = alerts.map(
-            async (alert) =>
-              await handleGrafanaEmailAlert(alert, logger, server.msGraph)
+          const emailAlerts = alerts.map((alert) =>
+            handleGrafanaEmailAlert(alert, logger, server.msGraph)
           )
           await Promise.all(emailAlerts)
         } catch (error) {
@@ -107,8 +106,8 @@ const grafanaAlertListener = {
         }
 
         logger = createAlertLogger(message, 'PagerDuty', server.logger)
-        const pagerDutyAlerts = alerts.map(
-          async (alert) => await handleGrafanaPagerDutyAlert(alert, logger)
+        const pagerDutyAlerts = alerts.map((alert) =>
+          handleGrafanaPagerDutyAlert(alert, logger)
         )
         await Promise.all(pagerDutyAlerts)
       } catch (error) {
@@ -137,7 +136,7 @@ const gitHubEventsListener = {
   }
 }
 
-export { grafanaAlertListener, gitHubEventsListener }
+export { grafanaAlertListener, gitHubEventsListener, filterDuplicateAlerts }
 /**
  * @import {StopOptions} from 'sqs-consumer'
  */

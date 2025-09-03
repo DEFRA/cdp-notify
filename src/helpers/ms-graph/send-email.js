@@ -6,7 +6,7 @@
  * @param {[string]} recipients
  * @returns {Promise<*>}
  */
-async function sendEmail(msGraph, sender, { subject, body }, recipients) {
+function sendEmail(msGraph, sender, { subject, body }, recipients) {
   const toRecipients = recipients.map((emailAddress) => {
     return {
       emailAddress: {
@@ -15,7 +15,7 @@ async function sendEmail(msGraph, sender, { subject, body }, recipients) {
     }
   })
 
-  return await msGraph.api(`users/${sender}/sendMail`).post({
+  return msGraph.api(`users/${sender}/sendMail`).post({
     message: {
       subject,
       body: {

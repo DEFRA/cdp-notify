@@ -108,9 +108,9 @@ async function workflowRunNotificationHandler(server, event, slackChannel) {
 
     const sendFailedActionNotification = slack.sendFailedActionNotification
 
-    const ActionFailed = shouldSendAlert(event)
+    const actionFailed = shouldSendAlert(event)
 
-    if (ActionFailed) {
+    if (actionFailed) {
       server.logger.info(
         `Notification handler: '${workflowName}' in ${repo} failed: ${workflowUrl} with status '${conclusion}'`
       )

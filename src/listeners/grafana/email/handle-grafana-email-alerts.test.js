@@ -40,8 +40,8 @@ describe('#handle-grafana-alerts', () => {
       .mocked(fetchService)
       .mockResolvedValue({ teams: [{ teamId: '123456' }] })
     jest.mocked(fetchTeam).mockResolvedValue({
-      status: 'success',
-      team: { name: 'test-team', alertEmailAddresses: ['foo@bar.com'] }
+      name: 'test-team',
+      alertEmailAddresses: ['foo@bar.com']
     })
 
     await handleGrafanaEmailAlert(alert, server.logger, server.msGraph)
@@ -64,11 +64,8 @@ describe('#handle-grafana-alerts', () => {
       .mocked(fetchService)
       .mockResolvedValue({ teams: [{ teamId: '123456' }] })
     jest.mocked(fetchTeam).mockResolvedValue({
-      status: 'success',
-      team: {
-        name: 'test-team',
-        alertEmailAddresses: ['a@foo.bar', 'b@foo.bar', 'c@foo.bar']
-      }
+      name: 'test-team',
+      alertEmailAddresses: ['a@foo.bar', 'b@foo.bar', 'c@foo.bar']
     })
 
     await handleGrafanaEmailAlert(alert, server.logger, server.msGraph)
@@ -94,18 +91,12 @@ describe('#handle-grafana-alerts', () => {
     jest
       .mocked(fetchTeam)
       .mockResolvedValueOnce({
-        status: 'success',
-        team: {
-          name: 'test-team-one',
-          alertEmailAddresses: ['user@team1']
-        }
+        name: 'test-team-one',
+        alertEmailAddresses: ['user@team1']
       })
       .mockResolvedValueOnce({
-        status: 'success',
-        team: {
-          name: 'test-team-two',
-          alertEmailAddresses: ['user@team2']
-        }
+        name: 'test-team-two',
+        alertEmailAddresses: ['user@team2']
       })
 
     await handleGrafanaEmailAlert(alert, server.logger, server.msGraph)
@@ -131,18 +122,12 @@ describe('#handle-grafana-alerts', () => {
     jest
       .mocked(fetchTeam)
       .mockResolvedValueOnce({
-        status: 'success',
-        team: {
-          name: 'test-team-one',
-          alertEmailAddresses: ['user@team1', 'user@duplicateTeam']
-        }
+        name: 'test-team-one',
+        alertEmailAddresses: ['user@team1', 'user@duplicateTeam']
       })
       .mockResolvedValueOnce({
-        status: 'success',
-        team: {
-          name: 'test-team-two',
-          alertEmailAddresses: ['user@team2', 'user@duplicateTeam']
-        }
+        name: 'test-team-two',
+        alertEmailAddresses: ['user@team2', 'user@duplicateTeam']
       })
 
     await handleGrafanaEmailAlert(alert, server.logger, server.msGraph)
@@ -165,8 +150,8 @@ describe('#handle-grafana-alerts', () => {
       .mocked(fetchService)
       .mockResolvedValue({ teams: [{ teamId: '123456' }] })
     jest.mocked(fetchTeam).mockResolvedValue({
-      status: 'success',
-      team: { name: 'test-team', alertEmailAddresses: ['foo@bar.com'] }
+      name: 'test-team',
+      alertEmailAddresses: ['foo@bar.com']
     })
 
     await handleGrafanaEmailAlert(alert, server.logger, server.msGraph)
@@ -185,8 +170,8 @@ describe('#handle-grafana-alerts', () => {
       .mocked(fetchService)
       .mockResolvedValue({ teams: [{ teamId: '123456' }] })
     jest.mocked(fetchTeam).mockResolvedValue({
-      status: 'success',
-      team: { name: 'test-team', alertEmailAddresses: ['foo@bar.com'] }
+      name: 'test-team',
+      alertEmailAddresses: ['foo@bar.com']
     })
 
     await handleGrafanaEmailAlert(

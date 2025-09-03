@@ -20,27 +20,27 @@ const alertColours = {
  */
 function shouldSendAlert(alert) {
   const alertEnvironments = config.get('alertEnvironments')
-  return alertEnvironments.includes(alert.environment)
+  return sendEmailAlerts && alertEnvironments.includes(alert.environment)
 }
 
 /**
- * @param {Alert} alert
+ * @param {string} alert
  * @param {Logger} logger
  * @returns {Promise<*[string]>}
  */
 async function findContactsForAlert(alert, logger) {
   const serviceTeams = await getTeams(alert.service, logger)
 
-  const teams = serviceTeams.map(async (team) => await fetchTeam(team.teamId))
+  const teams = serviceTeams.map((team) => fetchTeam(team.teamId))
 
   const contacts = (await Promise.all(teams))
-    .map((t) => t.team?.alertEmailAddresses || [])
+    .map((t) => t.alertEmailAddresses || [])
     .flat() // flatten nested arrays into one
 
   const uniqueContacts = [...new Set(contacts)]
 
   logger.info(
-    `found ${uniqueContacts.length} alert email addresses for ${alert.service}`
+    `Found ${uniqueContacts.length} alert email addresses for ${alert.service}`
   )
   return uniqueContacts
 }
@@ -51,8 +51,8 @@ async function handleGrafanaEmailAlert(alert, logger, msGraph) {
   }
 
   if (!alert?.service) {
-    logger.warn(`alert did not contain a service field`)
-    return []
+    logger.warn(`Alert did not contain a service field`)
+    return
   }
 
   let email
@@ -76,10 +76,7 @@ async function handleGrafanaEmailAlert(alert, logger, msGraph) {
     `Grafana alert ${alert.status} for ${alert.service} in ${alert.environment} - Alert: ${alert.alertName}`
   )
 
-  if (sendEmailAlerts) {
-    logger.info('Sending email alert')
-    await sendEmail(msGraph, sender, email, contacts)
-  }
+  return sendEmail(msGraph, sender, email, contacts)
 }
 
 /**

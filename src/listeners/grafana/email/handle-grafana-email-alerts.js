@@ -29,9 +29,9 @@ function shouldSendAlert(alert) {
  * @returns {Promise<*[string]>}
  */
 async function findContactsForAlert(alert, logger) {
-  const serviceTeams = await getTeams(alert.service, logger)
+  const teamIds = getTeams(alert, logger)
 
-  const teams = serviceTeams.map((team) => fetchTeam(team.teamId))
+  const teams = teamIds.map(fetchTeam)
 
   const contacts = (await Promise.all(teams))
     .map((t) => t.alertEmailAddresses || [])

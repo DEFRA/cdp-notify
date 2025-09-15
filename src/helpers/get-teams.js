@@ -1,28 +1,37 @@
 import {
-  serviceToTeamOverride,
-  platform
+  platform,
+  serviceToTeamOverride
 } from '~/src/config/service-override.js'
-import { fetchService } from '~/src/helpers/fetch/fetch-service.js'
 
 /**
- * @param {string} serviceName
+ * @param {object} alert
  * @param {Logger} logger
- * @returns {Promise<{name: string, teamId: string}[]|*|*[]>}
+ * @returns {string[]}
  */
-export async function getTeams(serviceName, logger) {
+export function getTeams(alert, logger) {
+  if (alert.teams) {
+    return alert.teams.split(',')
+  }
+
+  const serviceName = alert.service
   const teams = serviceToTeamOverride[serviceName]?.teams
 
   if (teams) {
     return teams
   }
 
-  const service = await fetchService(serviceName)
-  if (service?.teams) {
-    return service.teams
+  if (serviceName.startsWith('cdp-')) {
+    return platform.teams
   }
 
-  if (serviceName.startsWith('cdp-')) {
-    return platform
+  if (alert.team) {
+    logger.warn(
+      {
+        event: logger.bindings().event
+      },
+      `teams was missing from alert`
+    )
+    return [alert.team.toLowerCase()]
   }
 
   logger.error(

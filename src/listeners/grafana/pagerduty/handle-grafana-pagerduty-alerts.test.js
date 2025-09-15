@@ -1,11 +1,9 @@
 import {
   createDedupeKey,
-  findIntegrationKeyForService,
   handleGrafanaPagerDutyAlert,
   shouldSendAlert
 } from '~/src/listeners/grafana/pagerduty/handle-grafana-pagerduty-alerts.js'
 import { serviceToTeamOverride } from '~/src/config/service-override.js'
-import { fetchService } from '~/src/helpers/fetch/fetch-service.js'
 import { config } from '~/src/config/index.js'
 import { sendAlert } from '~/src/helpers/pagerduty/send-alert.js'
 import { createLogger } from '~/src/helpers/logging/logger.js'
@@ -122,43 +120,6 @@ describe('#shouldSendAlert', () => {
   })
 })
 
-describe('findIntegrationKeyForService', () => {
-  test('should return null if key is not in config', () => {
-    const res = findIntegrationKeyForService({
-      service: 'this-is-not-a-real-service'
-    })
-
-    expect(res).toBeNull()
-  })
-
-  test('should return the key if set in config', () => {
-    const service = 'find-integration-1'
-    const key = '1234'
-    config.set(`pagerduty.services.${service}.integrationKey`, key)
-
-    const res = findIntegrationKeyForService({
-      service
-    })
-
-    expect(res).toBe(key)
-  })
-
-  test('should return the key if set in overrides', () => {
-    const service = 'find-integration-2'
-    const technicalService = 'technical-service-2'
-    const key = '9999'
-    serviceToTeamOverride[service] = { technicalService }
-    config.set(`pagerduty.services.${technicalService}.integrationKey`, key)
-
-    const res = findIntegrationKeyForService({
-      service
-    })
-
-    expect(res).toBe(key)
-  })
-})
-
-jest.mock('~/src/helpers/fetch/fetch-service.js')
 jest.mock('~/src/helpers/pagerduty/send-alert.js')
 
 describe('#sendAlertsToPagerduty', () => {
@@ -170,7 +131,7 @@ describe('#sendAlertsToPagerduty', () => {
     const integrationKey = '1234567890'
     const team = 'team1'
     const service1 = 'service1'
-    jest.mocked(fetchService).mockResolvedValue({ teams: [{ name: team }] })
+
     jest.mocked(sendAlert).mockResolvedValue({ text: () => 'ok' })
 
     config.set(`pagerduty.teams.${team}.integrationKey`, integrationKey)
@@ -180,12 +141,12 @@ describe('#sendAlertsToPagerduty', () => {
       service: service1,
       environment: 'prod',
       status: 'firing',
-      pagerDuty: 'true'
+      pagerDuty: 'true',
+      teams: 'team1'
     }
     const logger = createLogger()
     await handleGrafanaPagerDutyAlert(grafanaAlert, logger)
 
-    expect(fetchService).toHaveBeenCalledWith(service1)
     expect(sendAlert).toHaveBeenCalledWith(
       grafanaAlert,
       ['team1'],
@@ -201,7 +162,6 @@ describe('#sendAlertsToPagerduty', () => {
     const integrationKey = '3453445'
     const team2 = 'team2'
     const service2 = 'service2'
-    jest.mocked(fetchService).mockResolvedValue({ teams: [{ name: team2 }] })
     jest.mocked(sendAlert).mockResolvedValue({ text: () => 'ok' })
 
     config.set(`pagerduty.teams.${team2}.integrationKey`, integrationKey)
@@ -210,19 +170,18 @@ describe('#sendAlertsToPagerduty', () => {
     const grafanaAlert = {
       service: service2,
       environment: 'prod',
-      status: 'firing'
+      status: 'firing',
+      teams: 'team2'
     }
 
     await handleGrafanaPagerDutyAlert(grafanaAlert, createLogger())
 
-    expect(fetchService).not.toHaveBeenCalled()
     expect(sendAlert).not.toHaveBeenCalled()
   })
 
   test('should not trigger pagerduty no integration keys are set for team', async () => {
     const team3 = 'team3'
     const service3 = 'service3'
-    jest.mocked(fetchService).mockResolvedValue({ teams: [{ name: team3 }] })
     jest.mocked(sendAlert).mockResolvedValue({ text: () => 'ok' })
 
     config.set('pagerduty.sendAlerts', true)
@@ -231,44 +190,12 @@ describe('#sendAlertsToPagerduty', () => {
       service: service3,
       environment: 'prod',
       status: 'firing',
-      pagerDuty: 'true'
+      pagerDuty: 'true',
+      teams: team3
     }
 
     await handleGrafanaPagerDutyAlert(grafanaAlert, createLogger())
 
-    expect(fetchService).toHaveBeenCalledWith(service3)
     expect(sendAlert).not.toHaveBeenCalled()
-  })
-
-  test('should trigger pagerduty using the fallback service key', async () => {
-    const integrationKey = 'service-level-key'
-    const team4 = 'team4'
-    const service4 = 'service4'
-    jest.mocked(fetchService).mockResolvedValue({ teams: [{ name: team4 }] })
-    jest.mocked(sendAlert).mockResolvedValue({ text: () => 'ok' })
-
-    config.set('pagerduty.sendAlerts', true)
-    config.set(`pagerduty.services.${service4}.integrationKey`, integrationKey)
-
-    const grafanaAlert = {
-      service: service4,
-      environment: 'prod',
-      status: 'firing',
-      pagerDuty: 'true'
-    }
-
-    const logger = createLogger()
-    await handleGrafanaPagerDutyAlert(grafanaAlert, logger)
-
-    expect(fetchService).toHaveBeenCalledWith(service4)
-    expect(sendAlert).toHaveBeenCalledWith(
-      grafanaAlert,
-      ['team4'],
-      'trigger',
-      undefined,
-      expect.any(String),
-      integrationKey,
-      logger
-    )
   })
 })

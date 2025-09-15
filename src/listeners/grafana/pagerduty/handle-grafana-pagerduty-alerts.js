@@ -42,22 +42,10 @@ function findIntegrationKeyForTeam(team) {
 }
 
 /**
- * If there is an integration key, it's assumed that we should send a PagerDuty alert
- * @param {Alert} alert
- * @returns {string|null}
+ * Creates an event-scoped logger function.
+ * @param {Logger} logger
+ * @returns {(outcome: string, reason?: string) => Logger}
  */
-export function findIntegrationKeyForService(alert) {
-  const overrides = serviceToTeamOverride[alert.service]?.technicalService
-
-  const service = overrides || alert.service
-
-  try {
-    return config.get(`pagerduty.services.${service}.integrationKey`)
-  } catch {
-    return null
-  }
-}
-
 function eventLogger(logger) {
   return (outcome, reason) =>
     logger.child({
@@ -84,13 +72,6 @@ export async function handleGrafanaPagerDutyAlert(alert, logger) {
     return
   }
 
-  if (!shouldSendAlert(alert, config.get('alertEnvironments'))) {
-    noAlertLogger('environment not configured for alerts').info(
-      `ignoring alert`
-    )
-    return
-  }
-
   if (!alert?.service) {
     noAlertLogger('alert did not contain a service field').warn(
       `no service field`
@@ -98,18 +79,18 @@ export async function handleGrafanaPagerDutyAlert(alert, logger) {
     return
   }
 
-  const teams = (await getTeams(alert.service, logger)).map((t) => t.name)
+  if (!shouldSendAlert(alert, config.get('alertEnvironments'))) {
+    noAlertLogger('environment not configured for alerts').info(
+      `ignoring alert`
+    )
+    return
+  }
+
+  const teams = getTeams(alert, logger)
 
   const integrationKeys = teams
     .map((team) => findIntegrationKeyForTeam(team))
     .filter((t) => t)
-
-  if (integrationKeys.length === 0) {
-    const key = findIntegrationKeyForService(alert)
-    if (key) {
-      integrationKeys.push(key)
-    }
-  }
 
   if (integrationKeys.length === 0) {
     noAlertLogger(`No integration key found for ${alert.service}.`).info(
@@ -162,5 +143,5 @@ export async function handleGrafanaPagerDutyAlert(alert, logger) {
 }
 
 /**
- * @import { Logger } from 'pino'
+ * @typedef {import("pino").Logger} Logger
  */

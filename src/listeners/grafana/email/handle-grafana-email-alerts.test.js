@@ -2,12 +2,10 @@ import { createLogger } from '~/src/helpers/logging/logger.js'
 import { handleGrafanaEmailAlert } from '~/src/listeners/grafana/email/handle-grafana-email-alerts.js'
 import { sendEmail } from '~/src/helpers/ms-graph/send-email.js'
 import { fetchTeam } from '~/src/helpers/fetch/fetch-team.js'
-import { fetchService } from '~/src/helpers/fetch/fetch-service.js'
 import { config } from '~/src/config/index.js'
 
 jest.mock('~/src/helpers/ms-graph/send-email.js')
 jest.mock('~/src/helpers/fetch/fetch-team.js')
-jest.mock('~/src/helpers/fetch/fetch-service.js')
 
 describe('#handle-grafana-alerts', () => {
   beforeEach(() => {
@@ -36,9 +34,6 @@ describe('#handle-grafana-alerts', () => {
   })
 
   test('sends an emails to the service alert email address', async () => {
-    jest
-      .mocked(fetchService)
-      .mockResolvedValue({ teams: [{ teamId: '123456' }] })
     jest.mocked(fetchTeam).mockResolvedValue({
       name: 'test-team',
       alertEmailAddresses: ['foo@bar.com']
@@ -60,9 +55,6 @@ describe('#handle-grafana-alerts', () => {
   })
 
   test('sends multiple emails if the service has multiple email addresses', async () => {
-    jest
-      .mocked(fetchService)
-      .mockResolvedValue({ teams: [{ teamId: '123456' }] })
     jest.mocked(fetchTeam).mockResolvedValue({
       name: 'test-team',
       alertEmailAddresses: ['a@foo.bar', 'b@foo.bar', 'c@foo.bar']
@@ -84,9 +76,21 @@ describe('#handle-grafana-alerts', () => {
   })
 
   test('sends multiple emails when the service is owned by more than one team', async () => {
-    jest.mocked(fetchService).mockResolvedValue({
-      teams: [{ teamId: '1111' }, { teamId: '2222' }]
-    })
+    const alert = {
+      environment: 'prod',
+      service: 'test-service',
+      team: 'Platform',
+      teams: 'platform,support',
+      alertName: 'test-service - prod',
+      status: 'firing',
+      startsAt: '2024-11-04 12:53:20 +0000 UTC',
+      endsAt: '2024-11-04 12:53:20 +0000 UTC',
+      summary: 'A test suite',
+      description: '',
+      series: '',
+      runbookUrl: '',
+      alertURL: 'https://grafana/alerting/grafana/0000/view'
+    }
 
     jest
       .mocked(fetchTeam)
@@ -115,9 +119,21 @@ describe('#handle-grafana-alerts', () => {
   })
 
   test('sends multiple emails to unique email addresses when the service is owned by more than one team', async () => {
-    jest.mocked(fetchService).mockResolvedValue({
-      teams: [{ teamId: '1111' }, { teamId: '2222' }]
-    })
+    const alert = {
+      environment: 'prod',
+      service: 'test-service',
+      team: 'Platform',
+      teams: 'platform,support',
+      alertName: 'test-service - prod',
+      status: 'firing',
+      startsAt: '2024-11-04 12:53:20 +0000 UTC',
+      endsAt: '2024-11-04 12:53:20 +0000 UTC',
+      summary: 'A test suite',
+      description: '',
+      series: '',
+      runbookUrl: '',
+      alertURL: 'https://grafana/alerting/grafana/0000/view'
+    }
 
     jest
       .mocked(fetchTeam)
@@ -146,9 +162,6 @@ describe('#handle-grafana-alerts', () => {
   })
 
   test('Firing email should contain expected content', async () => {
-    jest
-      .mocked(fetchService)
-      .mockResolvedValue({ teams: [{ teamId: '123456' }] })
     jest.mocked(fetchTeam).mockResolvedValue({
       name: 'test-team',
       alertEmailAddresses: ['foo@bar.com']
@@ -166,9 +179,6 @@ describe('#handle-grafana-alerts', () => {
   })
 
   test('Resolved email should contain expected content', async () => {
-    jest
-      .mocked(fetchService)
-      .mockResolvedValue({ teams: [{ teamId: '123456' }] })
     jest.mocked(fetchTeam).mockResolvedValue({
       name: 'test-team',
       alertEmailAddresses: ['foo@bar.com']
@@ -194,6 +204,7 @@ const alert = {
   environment: 'prod',
   service: 'test-service',
   team: 'Platform',
+  teams: 'platform',
   alertName: 'test-service - prod',
   status: 'firing',
   startsAt: '2024-11-04 12:53:20 +0000 UTC',

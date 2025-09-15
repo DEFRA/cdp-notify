@@ -389,7 +389,7 @@ const config = convict({
       env: 'SEND_PAGERDUTY_ALERT'
     },
     teams: {
-      Platform: {
+      platform: {
         integrationKey: {
           doc: 'Integration key for digital service',
           format: String,
@@ -397,7 +397,7 @@ const config = convict({
           env: 'PLATFORM_INTEGRATION_KEY'
         }
       },
-      'Trade-Data-Matching': {
+      'trade-data-matching': {
         integrationKey: {
           doc: 'Integration key for digital service',
           format: String,
@@ -405,7 +405,7 @@ const config = convict({
           env: 'TRADE_DATA_MATCHING_INTEGRATION_KEY'
         }
       },
-      'Platform-Tenant-Cko': {
+      'platform-tenant-cko': {
         integrationKey: {
           doc: 'Integration key for digital service',
           format: String,

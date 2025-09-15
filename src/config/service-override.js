@@ -11,21 +11,11 @@
 
 // todo this is the id from management - make configurable
 const platform = {
-  teams: [
-    {
-      name: 'Platform',
-      teamId: 'platform'
-    }
-  ]
+  teams: ['platform']
 }
 
 const platformTenantCko = {
-  teams: [
-    {
-      name: 'Platform-Tenant-Cko',
-      teamId: 'platform'
-    }
-  ]
+  teams: ['platform']
 }
 
 const serviceToTeamOverride = {

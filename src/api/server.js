@@ -59,7 +59,7 @@ async function createServer() {
     secureContext,
     pulse,
     msGraphPlugin,
-    mongoDb,
+    { plugin: mongoDb.plugin, options: config.get('mongo') },
     sqsClient,
     snsClient,
     grafanaAlertListener,

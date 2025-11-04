@@ -306,7 +306,8 @@ const config = convict({
             'cdp-percona-mongo',
             'cdp-ssl-sidecar',
             'cdp-squid-proxy',
-            'cdp-nginx-upstreams'
+            'cdp-nginx-upstreams',
+            'cdp-tenant-config'
           ],
           env: 'INFRA_FLOW_REPOS'
         }

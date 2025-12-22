@@ -292,6 +292,9 @@ const config = convict({
           default: [
             'cdp-iam-users',
             'cdp-tf-core',
+            'cdp-tf-svc-databases',
+            'cdp-tf-svc-dns',
+            'cdp-tf-svc-iam',
             'cdp-tf-svc-infra',
             'cdp-tf-modules',
             'cdp-tf-pagerduty',

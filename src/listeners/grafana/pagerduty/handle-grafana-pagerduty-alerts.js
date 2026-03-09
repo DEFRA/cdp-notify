@@ -119,6 +119,8 @@ export async function handleGrafanaPagerDutyAlert(alert, logger) {
 
   const dedupeKey = createDedupeKey(alert)
 
+  alert.summary ||= 'Summary in Grafana alert was missing'
+
   if (config.get('pagerduty.sendAlerts')) {
     const pagerDutyResponses = integrationKeys.map(async (integrationKey) => {
       const resp = await sendAlert(

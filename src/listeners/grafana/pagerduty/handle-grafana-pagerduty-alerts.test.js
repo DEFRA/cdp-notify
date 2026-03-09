@@ -158,6 +158,46 @@ describe('#sendAlertsToPagerduty', () => {
     )
   })
 
+  test('should trigger pagerduty message with default summary when summary is missing', async () => {
+    const integrationKey = '1234567890'
+    const team = 'team1'
+    const service1 = 'service1'
+
+    jest.mocked(sendAlert).mockResolvedValue({ text: () => 'ok' })
+
+    config.set(`pagerduty.teams.${team}.integrationKey`, integrationKey)
+    config.set('pagerduty.sendAlerts', true)
+
+    const logger = createLogger()
+    await handleGrafanaPagerDutyAlert(
+      {
+        service: service1,
+        environment: 'prod',
+        status: 'firing',
+        pagerDuty: 'true',
+        teams: 'team1'
+      },
+      logger
+    )
+
+    expect(sendAlert).toHaveBeenCalledWith(
+      {
+        service: service1,
+        environment: 'prod',
+        status: 'firing',
+        pagerDuty: 'true',
+        teams: 'team1',
+        summary: 'Summary in Grafana alert was missing'
+      },
+      ['team1'],
+      'trigger',
+      undefined,
+      expect.any(String),
+      integrationKey,
+      logger
+    )
+  })
+
   test('should not trigger pagerduty if alert has no pagerDuty=true flag', async () => {
     const integrationKey = '3453445'
     const team2 = 'team2'

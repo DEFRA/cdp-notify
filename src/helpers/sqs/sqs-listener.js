@@ -113,15 +113,22 @@ const grafanaAlertListener = {
       } catch (error) {
         const logger = createAlertLogger(message, 'PagerDuty', server.logger)
         logger.error(error, `PagerDuty - SQS ${queueUrl}: ${error.message}`)
-        await sendAlertForCdpNotify(
-          `Failed to process SQS message: ${error.message}`
-        )
+
+        if (isFromProd(message.Body)) {
+          await sendAlertForCdpNotify(
+            `Failed to process SQS message: ${error.message}`
+          )
+        }
       } finally {
         const receiptHandle = message.ReceiptHandle
         await deleteSqsMessage(server.sqs, queueUrl, receiptHandle)
       }
     }
   }
+}
+
+function isFromProd(message) {
+  return message ? /"environment":\s*"prod"/.test(message) : false
 }
 
 const gitHubEventsListener = {
@@ -136,7 +143,12 @@ const gitHubEventsListener = {
   }
 }
 
-export { grafanaAlertListener, gitHubEventsListener, filterDuplicateAlerts }
+export {
+  grafanaAlertListener,
+  gitHubEventsListener,
+  filterDuplicateAlerts,
+  isFromProd
+}
 /**
  * @import {StopOptions} from 'sqs-consumer'
  */

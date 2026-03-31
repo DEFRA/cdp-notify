@@ -311,7 +311,8 @@ const config = convict({
             'cdp-squid-proxy',
             'cdp-nginx-upstreams',
             'cdp-tenant-config',
-            'cdp-environment-rebuild'
+            'cdp-environment-rebuild',
+            'cdp-tf-mongo'
           ],
           env: 'INFRA_FLOW_REPOS'
         }

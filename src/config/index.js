@@ -312,7 +312,8 @@ const config = convict({
             'cdp-nginx-upstreams',
             'cdp-tenant-config',
             'cdp-environment-rebuild',
-            'cdp-tf-mongo'
+            'cdp-tf-mongo',
+            'cdp-tf-svc-bedrock'
           ],
           env: 'INFRA_FLOW_REPOS'
         }

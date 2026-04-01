@@ -310,7 +310,10 @@ const config = convict({
             'cdp-ssl-sidecar',
             'cdp-squid-proxy',
             'cdp-nginx-upstreams',
-            'cdp-tenant-config'
+            'cdp-tenant-config',
+            'cdp-environment-rebuild',
+            'cdp-tf-mongo',
+            'cdp-tf-svc-bedrock'
           ],
           env: 'INFRA_FLOW_REPOS'
         }

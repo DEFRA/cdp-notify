@@ -313,7 +313,9 @@ const config = convict({
             'cdp-tenant-config',
             'cdp-environment-rebuild',
             'cdp-tf-mongo',
-            'cdp-tf-svc-bedrock'
+            'cdp-tf-svc-bedrock',
+            'cdp-cloudwatch-agent',
+            'cdp-fluentbit'
           ],
           env: 'INFRA_FLOW_REPOS'
         }
